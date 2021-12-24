@@ -1,7 +1,10 @@
 package com.skillbox.engine.repository;
 
 import com.skillbox.engine.model.entity.GlobalSetting;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-public interface GlobalSettingsRepository extends CrudRepository<GlobalSetting, Integer> {
+@Repository
+public interface GlobalSettingsRepository extends JpaRepository<GlobalSetting, Integer> {
+
 }

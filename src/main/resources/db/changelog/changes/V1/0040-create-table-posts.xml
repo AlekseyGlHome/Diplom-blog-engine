@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="V1-5" author="Aleksey">
+        <createTable tableName="posts">
+            <column autoIncrement="true" name="id" type="INT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_posts"/>
+            </column>
+            <column name="is_active" type="tinyint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="moderation_status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="moderator_id" type="INT"/>
+            <column name="user_id" type="INT"/>
+            <column name="time" type="DATETIME"/>
+            <column name="title" type="VARCHAR(255)"/>
+            <column name="text" type="TEXT"/>
+            <column name="view_count" type="INT"/>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

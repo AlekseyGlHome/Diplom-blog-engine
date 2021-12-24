@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="V2-1" author="Aleksey">
+        <sql>
+            insert users (id, is_moderator, reg_time, name, email, password, code, photo)
+            values(1,1,'2021.01.01','Admin',"admin@mail.ru","admin","",'');
+            insert users (id, is_moderator, reg_time, name, email, password, code, photo)
+            values(2,0,'2021.05.10','Ivan',"ivan@mail.ru","ivan","",'');
+            insert users (id, is_moderator, reg_time, name, email, password, code, photo)
+            values(3,0,'2021.04.15','Alex',"myAlex@mail.ru","alex","",'');
+
+            insert tags (id, name)
+            values(1,"Java");
+            insert tags (id, name)
+            values(2,"C#");
+            insert tags (id, name)
+            values(3,"Rubby");
+            insert tags (id, name)
+            values(4,"Hibernate");
+            insert tags (id, name)
+            values(5,"Programming");
+
+            insert posts (id, is_active, moderation_status, moderator_id, user_id, time, title, text, view_count)
+            values(1,1,"NEW",null,2,"2021.12.01","1 Spring для ленивых. Основы, базовые концепции и примеры с кодом",
+            '1 Я у себя буду делать в Intellij Idea Enterprise Edition. Но все мои примеры должны так же работать и в бесплатной Intellij Idea Community Edition. Просто если увидите на скриншотах, что у меня есть какое-то окно, которого нет у вас — не переживайте, для данного проекта это не критично :)
+            Для начала создаем пустой мавен проект. Я показывал как это сделать в статье (читать до слов "Пришло время наш мавен-проект превратить в web-проект.", после этого там уже показывается как сделать веб-проект, а этого нам сейчас не нужно)
+            Создадим в папке src/main/java какой-нибудь пакет (в моем случае я его назвал "ru.javademo.info.fatfaggy.animals", вы можете назвать как хотите, просто в нужных местах не забудьте на свое название заменять). И создадим класс Main в котором сделаем метод'
+            ,0);
+
+            insert posts (id, is_active, moderation_status, moderator_id, user_id, time, title, text, view_count)
+            values(2,1,"ACCEPTED",1,3,"2021.12.10","2 Spring для ленивых. Основы, базовые концепции и примеры с кодом",
+            '2 Я у себя буду делать в &lt;b&gt;Intellij Idea Enterprise Edition.&lt;/b&gt; &lt;br&gt; Но все мои примеры должны так же работать и в бесплатной Intellij Idea Community Edition. Просто если увидите на скриншотах, что у меня есть какое-то окно, которого нет у вас — не переживайте, для данного проекта это не критично :)
+            &lt;br&gt;Для начала создаем пустой мавен проект. &lt;br&gt;Я показывал как это сделать в статье (читать до слов "Пришло время наш мавен-проект превратить в web-проект.", после этого там уже показывается как сделать веб-проект, а этого нам сейчас не нужно)
+            Создадим в папке &lt;Strong&gt;src/main/java&lt;/Strong&gt; какой-нибудь пакет (в моем случае я его назвал "ru.javademo.info.fatfaggy.animals", вы можете назвать как хотите, просто в нужных местах не забудьте на свое название заменять). И создадим класс Main в котором сделаем метод'
+            ,15);
+
+            insert posts (id, is_active, moderation_status, moderator_id, user_id, time, title, text, view_count)
+            values(3,0,"NEW",null,2,"2021.10.25","3 Spring для ленивых. Основы, базовые концепции и примеры с кодом",
+            '3 Я у себя буду делать в Intellij Idea Enterprise Edition. Но все мои примеры должны так же работать и в бесплатной Intellij Idea Community Edition. Просто если увидите на скриншотах, что у меня есть какое-то окно, которого нет у вас — не переживайте, для данного проекта это не критично :)
+            Для начала создаем пустой мавен проект. Я показывал как это сделать в статье (читать до слов "Пришло время наш мавен-проект превратить в web-проект.", после этого там уже показывается как сделать веб-проект, а этого нам сейчас не нужно)
+            Создадим в папке src/main/java какой-нибудь пакет (в моем случае я его назвал "ru.javademo.info.fatfaggy.animals", вы можете назвать как хотите, просто в нужных местах не забудьте на свое название заменять). И создадим класс Main в котором сделаем метод'
+            ,0);
+
+            insert posts (id, is_active, moderation_status, moderator_id, user_id, time, title, text, view_count)
+            values(4,1,"ACCEPTED",1,2,"2021.08.01","4 Spring для ленивых. Основы, базовые концепции и примеры с кодом",
+            '4 Я у себя буду делать в Intellij Idea Enterprise Edition. Но все мои примеры должны так же работать и в бесплатной Intellij Idea Community Edition. Просто если увидите на скриншотах, что у меня есть какое-то окно, которого нет у вас — не переживайте, для данного проекта это не критично :)
+            Для начала создаем пустой мавен проект. Я показывал как это сделать в статье (читать до слов "Пришло время наш мавен-проект превратить в web-проект.", после этого там уже показывается как сделать веб-проект, а этого нам сейчас не нужно)
+            Создадим в папке src/main/java какой-нибудь пакет (в моем случае я его назвал "ru.javademo.info.fatfaggy.animals", вы можете назвать как хотите, просто в нужных местах не забудьте на свое название заменять). И создадим класс Main в котором сделаем метод'
+            ,20);
+
+            insert posts (id, is_active, moderation_status, moderator_id, user_id, time, title, text, view_count)
+            values(5,1,"ACCEPTED",1,3,"2021.05.26","5 Spring для ленивых. Основы, базовые концепции и примеры с кодом",
+            '5 Я у себя буду делать в Intellij Idea Enterprise Edition. Но все мои примеры должны так же работать и в бесплатной Intellij Idea Community Edition. Просто если увидите на скриншотах, что у меня есть какое-то окно, которого нет у вас — не переживайте, для данного проекта это не критично :)
+            Для начала создаем пустой мавен проект. Я показывал как это сделать в статье (читать до слов "Пришло время наш мавен-проект превратить в web-проект.", после этого там уже показывается как сделать веб-проект, а этого нам сейчас не нужно)
+            Создадим в папке src/main/java какой-нибудь пакет (в моем случае я его назвал "ru.javademo.info.fatfaggy.animals", вы можете назвать как хотите, просто в нужных местах не забудьте на свое название заменять). И создадим класс Main в котором сделаем метод'
+            ,3);
+
+            insert tag2post (id, post_id, tag_id)
+            values(1,1,1);
+            insert tag2post (id, post_id, tag_id)
+            values(2,1,5);
+            insert tag2post (id, post_id, tag_id)
+            values(3,2,4);
+            insert tag2post (id, post_id, tag_id)
+            values(4,3,2);
+            insert tag2post (id, post_id, tag_id)
+            values(5,3,5);
+            insert tag2post (id, post_id, tag_id)
+            values(6,4,3);
+            insert tag2post (id, post_id, tag_id)
+            values(7,4,5);
+            insert tag2post (id, post_id, tag_id)
+            values(8,5,5);
+
+            insert post_votes (id, user_id, post_id, time, value)
+            values(1,2,2,"2021.10.15 09:04:10",1);
+            insert post_votes (id, user_id, post_id, time, value)
+            values(2,3,4,"2021.10.15 09:04:10",-1);
+            insert post_votes (id, user_id, post_id, time, value)
+            values(3,2,4,"2021.10.15 09:04:10",1);
+            insert post_votes (id, user_id, post_id, time, value)
+            values(4,3,2,"2021.10.15 09:04:10",1);
+
+            insert post_comments (id, parent_id, post_id, user_id, time, text)
+            values(1,null,4,2,"2021.04.22 11:15:30","1 Комментарий к опубликованному посту");
+            insert post_comments (id, parent_id, post_id, user_id, time, text)
+            values(2,null,2,3,"2021.10.15 09:50:10","2 Комментарий к опубликованному посту");
+            insert post_comments (id, parent_id, post_id, user_id, time, text)
+            values(3,null,4,1,"2021.04.22 11:15:30","3 Комментарий к опубликованному посту");
+            insert post_comments (id, parent_id, post_id, user_id, time, text)
+            values(4,null,2,1,"2021.04.22 11:15:30","4 Комментарий к опубликованному посту");
+            insert post_comments (id, parent_id, post_id, user_id, time, text)
+            values(5,null,4,3,"2021.04.22 11:15:30","5 Комментарий к опубликованному посту");
+            insert post_comments (id, parent_id, post_id, user_id, time, text)
+            values(6,1,4,3,"2021.04.22 11:15:30","6 Комментарий к опубликованному посту");
+            insert post_comments (id, parent_id, post_id, user_id, time, text)
+            values(7,4,2,2,"2021.04.22 11:15:30","7 Комментарий к опубликованному посту");
+
+            insert global_settings (id,code,name,value)
+            values(1,"MULTIUSER_MODE","Многопользовательский режим","YES");
+            insert global_settings (id,code,name,value)
+            values(2,"POST_PREMODERATION","Премодерация постов","YES");
+            insert global_settings (id,code,name,value)
+            values(3,"STATISTICS_IS_PUBLIC","Показывать всем статистику блога","NO");
+        </sql>
+        <rollback>
+            <sql>
+                delete from tag2post;
+                delete from global_settings;
+                delete from tags;
+                delete from post_votes;
+                SET FOREIGN_KEY_CHECKS=0;
+                delete from post_comments;
+                SET FOREIGN_KEY_CHECKS=1;
+                delete from posts;
+                delete from users;
+            </sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

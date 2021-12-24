@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="V1" author="Aleksey">
+        <tagDatabase tag="create-table"/>
+    </changeSet>
+    <include file="db/changelog/changes/V1/0001-create-table-captcha-codes.xml"/>
+    <include file="db/changelog/changes/V1/0010-create-table-global-settings.xml"/>
+    <include file="db/changelog/changes/V1/0020-create-table-post-comments.xml"/>
+    <include file="db/changelog/changes/V1/0030-create-table-post-votes.xml"/>
+    <include file="db/changelog/changes/V1/0040-create-table-posts.xml"/>
+    <include file="db/changelog/changes/V1/0050-create-table-tag2post.xml"/>
+    <include file="db/changelog/changes/V1/0060-create-table-tags.xml"/>
+    <include file="db/changelog/changes/V1/0070-create-table-users.xml"/>
+    <include file="db/changelog/changes/V1/0080-create-fk-posts-on-user.xml"/>
+    <include file="db/changelog/changes/V1/0090-create-fk-posts-on-moderator.xml"/>
+    <include file="db/changelog/changes/V1/0100-create-fk-posts-comments-on-parent.xml"/>
+    <include file="db/changelog/changes/V1/0110-create-fk-posts-comments-on-post.xml"/>
+    <include file="db/changelog/changes/V1/0120-create-fk-post-comments-on-user.xml"/>
+    <include file="db/changelog/changes/V1/0130-create-fk-post-votes-on-post.xml"/>
+    <include file="db/changelog/changes/V1/0140-create-fk-post-votes-on-user.xml"/>
+    <include file="db/changelog/changes/V1/0150-create-fk-tag2post-on-post.xml"/>
+    <include file="db/changelog/changes/V1/0160-create-fk-tag2post-on-tag.xml"/>
+</databaseChangeLog>

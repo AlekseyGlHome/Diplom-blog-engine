@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="V2-3" author="Aleksey">
+        <sql>
+<!--        6-28-->
+            insert tag2post (id, post_id, tag_id)
+            values(9,6,1);
+            insert tag2post (id, post_id, tag_id)
+            values(10,7,5);
+            insert tag2post (id, post_id, tag_id)
+            values(11,8,4);
+            insert tag2post (id, post_id, tag_id)
+            values(12,9,2);
+            insert tag2post (id, post_id, tag_id)
+            values(13,10,5);
+            insert tag2post (id, post_id, tag_id)
+            values(14,11,3);
+            insert tag2post (id, post_id, tag_id)
+            values(15,12,3);
+            insert tag2post (id, post_id, tag_id)
+            values(16,13,5);
+            insert tag2post (id, post_id, tag_id)
+            values(17,14,1);
+            insert tag2post (id, post_id, tag_id)
+            values(18,15,4);
+            insert tag2post (id, post_id, tag_id)
+            values(19,16,4);
+            insert tag2post (id, post_id, tag_id)
+            values(20,17,2);
+            insert tag2post (id, post_id, tag_id)
+            values(21,18,5);
+            insert tag2post (id, post_id, tag_id)
+            values(22,19,3);
+            insert tag2post (id, post_id, tag_id)
+            values(23,20,5);
+            insert tag2post (id, post_id, tag_id)
+            values(24,21,2);
+            insert tag2post (id, post_id, tag_id)
+            values(25,22,1);
+            insert tag2post (id, post_id, tag_id)
+            values(26,23,5);
+            insert tag2post (id, post_id, tag_id)
+            values(27,24,4);
+            insert tag2post (id, post_id, tag_id)
+            values(28,25,2);
+            insert tag2post (id, post_id, tag_id)
+            values(29,26,5);
+            insert tag2post (id, post_id, tag_id)
+            values(30,27,4);
+            insert tag2post (id, post_id, tag_id)
+            values(31,28,2);
+        </sql>
+        <rollback>
+            <sql>
+                delete from tag2post;
+
+            </sql>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

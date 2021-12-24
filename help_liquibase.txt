@@ -1,0 +1,5 @@
+rollback to Tag
+mvn liquibase:rollback -Dliquibase.rollbackTag=create-table
+
+update
+mvn liquibase:update

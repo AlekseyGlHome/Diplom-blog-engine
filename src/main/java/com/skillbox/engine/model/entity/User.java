@@ -36,18 +36,4 @@ public class User {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private Collection<Post> posts = new ArrayList<>();
 
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", isModerator=" + isModerator +
-                ", regTime=" + regTime +
-                ", name='" + name + '\'' +
-                ", eMail='" + eMail + '\'' +
-                ", password='" + password + '\'' +
-                ", code='" + code + '\'' +
-                ", photo='" + photo + '\'' +
-                ", posts=" + posts +
-                '}';
-    }
 }

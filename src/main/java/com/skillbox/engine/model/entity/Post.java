@@ -6,7 +6,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -32,7 +34,7 @@ public class Post {
     @JoinColumn(name = "user_id")
     private User user;
     @Column(name = "time")
-    private LocalDateTime time;
+    private Timestamp time;
     @Column(name = "title")
     private String title;
     @Column(name = "text", columnDefinition = "TEXT")
@@ -46,5 +48,7 @@ public class Post {
     private Collection<Tag> tag = new ArrayList<>();
     @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
     private Collection<PostComment> postComments = new ArrayList<>();
+    @OneToMany(mappedBy = "post", fetch = FetchType.LAZY)
+    private Collection<PostVotes> postVotes = new ArrayList<>();
 
 }

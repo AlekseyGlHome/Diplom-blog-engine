@@ -19,22 +19,20 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-//@RequiredArgsConstructor
 public class PostsService {
     private final PostRepository postRepository;
     private final HashMap<PostViewMode, SortModePost> sortModePost = new HashMap<>();
-    private PageRequest pageRequest;
 
     public PostsService(PostRepository postRepository) {
         this.postRepository = postRepository;
-        initSort(pageRequest);
+        initSort();
     }
 
     public PostResponse getAllPosts(int offset, int limit, String mode) {
         PostViewMode viewMode = PostViewMode.valueOf(mode.toUpperCase());
         int numberPage = offset / limit;
-        pageRequest = PageRequest.of(numberPage, limit);
-        Page<Post> posts = sortModePost.get(viewMode).sort();
+        PageRequest pageRequest = PageRequest.of(numberPage, limit);
+        Page<Post> posts = sortModePost.get(viewMode).sort(pageRequest);
         List<PostDTO> postsDTO = posts.getContent().stream()
                 .map(this::buildDTO)
                 .collect(Collectors.toList());
@@ -43,11 +41,11 @@ public class PostsService {
                 .posts(postsDTO).build();
     }
 
-    private void initSort(PageRequest pageRequest) {
-        sortModePost.put(PostViewMode.RECENT, () -> postRepository.findPostsOrderByDateDesc(pageRequest));
-        sortModePost.put(PostViewMode.POPULAR, () -> postRepository.findPostsOrderByComment(pageRequest));
-        sortModePost.put(PostViewMode.BEST, () -> postRepository.findPostsOrderByLikes(pageRequest));
-        sortModePost.put(PostViewMode.EARLY, () -> postRepository.findPostsOrderByDateAsc(pageRequest));
+    private void initSort() {
+        sortModePost.put(PostViewMode.RECENT, (pageRequest) -> postRepository.findPostsOrderByDateDesc(pageRequest));
+        sortModePost.put(PostViewMode.POPULAR, (pageRequest) -> postRepository.findPostsOrderByComment(pageRequest));
+        sortModePost.put(PostViewMode.BEST, (pageRequest) -> postRepository.findPostsOrderByLikes(pageRequest));
+        sortModePost.put(PostViewMode.EARLY, (pageRequest) -> postRepository.findPostsOrderByDateAsc(pageRequest));
     }
 
 

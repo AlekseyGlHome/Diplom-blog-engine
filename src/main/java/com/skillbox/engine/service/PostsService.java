@@ -1,9 +1,8 @@
 package com.skillbox.engine.service;
 
+import com.skillbox.engine.api.response.CalendarResponse;
 import com.skillbox.engine.api.response.PostResponse;
-import com.skillbox.engine.model.DTO.PostDTO;
-import com.skillbox.engine.model.DTO.SortModePost;
-import com.skillbox.engine.model.DTO.UserDTO;
+import com.skillbox.engine.model.DTO.*;
 import com.skillbox.engine.model.entity.Post;
 import com.skillbox.engine.model.entity.PostVotes;
 import com.skillbox.engine.model.enums.PostViewMode;
@@ -28,29 +27,78 @@ public class PostsService {
         initSort();
     }
 
+    public PostResponse getSearchPost(int offset, int limit, String query) {
+        if (query.isBlank() || query.isEmpty()) {
+            return getAllPosts(offset, limit, "recent");
+        }
+        PageRequest pageRequest = getPageRequest(offset, limit);
+        Page<Post> posts = postRepository.SearchesByPostsSortByDateDesc(pageRequest, query.trim());
+        List<PostDTO> postsDTO = getPostDTOS(posts);
+        return getPostResponse(posts.getTotalElements(), postsDTO);
+    }
+
     public PostResponse getAllPosts(int offset, int limit, String mode) {
         PostViewMode viewMode = PostViewMode.valueOf(mode.toUpperCase());
-        int numberPage = offset / limit;
-        PageRequest pageRequest = PageRequest.of(numberPage, limit);
+        PageRequest pageRequest = getPageRequest(offset, limit);
         Page<Post> posts = sortModePost.get(viewMode).sort(pageRequest);
-        List<PostDTO> postsDTO = posts.getContent().stream()
-                .map(this::buildDTO)
-                .collect(Collectors.toList());
+        List<PostDTO> postsDTO = getPostDTOS(posts);
+        return getPostResponse(posts.getTotalElements(), postsDTO);
+    }
+
+    public CalendarResponse getCalendar(int year) {
+        List<CalendarYearDTO> calendarYearDTOList = postRepository.getYearsOfPosts();
+        List<CalendarDatePostCount> calendarDatePostCountList = postRepository.getTheCountOfPostsByDateOfPosts(year);
+
+        return CalendarResponse.builder()
+                .years(calendarYearDTOList.stream()
+                        .map(CalendarYearDTO::getYear)
+                        .collect(Collectors.toList()))
+                .posts(calendarDatePostCountList.stream()
+                        .collect(Collectors.toMap(CalendarDatePostCount::getDate,CalendarDatePostCount::getCount)))
+                .build();
+    }
+
+    public PostResponse getAllPostsOnTheDate(int offSet, int limit, String date) {
+        PageRequest pageRequest = getPageRequest(offSet, limit);
+        Page<Post> posts = postRepository.findAllPostsOnTheDate(pageRequest, date);
+        List<PostDTO> postsDTO = getPostDTOS(posts);
+        return getPostResponse(posts.getTotalElements(), postsDTO);
+    }
+
+    public PostResponse getPostsByTag(int offSet, int limit, String tag) {
+        PageRequest pageRequest = getPageRequest(offSet, limit);
+        Page<Post> posts = postRepository.findPostsByTag(pageRequest, tag);
+        List<PostDTO> postsDTO = getPostDTOS(posts);
+        return getPostResponse(posts.getTotalElements(), postsDTO);
+    }
+
+    private PostResponse getPostResponse(long countTotalElements, List<PostDTO> postsDTO) {
         return PostResponse.builder()
-                .count(posts.getTotalElements())
+                .count(countTotalElements)
                 .posts(postsDTO).build();
     }
 
-    private void initSort() {
-        sortModePost.put(PostViewMode.RECENT, (pageRequest) -> postRepository.findPostsOrderByDateDesc(pageRequest));
-        sortModePost.put(PostViewMode.POPULAR, (pageRequest) -> postRepository.findPostsOrderByComment(pageRequest));
-        sortModePost.put(PostViewMode.BEST, (pageRequest) -> postRepository.findPostsOrderByLikes(pageRequest));
-        sortModePost.put(PostViewMode.EARLY, (pageRequest) -> postRepository.findPostsOrderByDateAsc(pageRequest));
+    private List<PostDTO> getPostDTOS(Page<Post> posts) {
+        return posts.getContent().stream()
+                .map(this::buildDTO)
+                .collect(Collectors.toList());
     }
 
+    private PageRequest getPageRequest(int offset, int limit) {
+        int numberPage = offset / limit;
+        return PageRequest.of(numberPage, limit);
+    }
+
+    private void initSort() {
+        sortModePost.put(PostViewMode.RECENT, postRepository::findPostsOrderByDateDesc);
+        sortModePost.put(PostViewMode.POPULAR, postRepository::findPostsOrderByComment);
+        sortModePost.put(PostViewMode.BEST, postRepository::findPostsOrderByLikes);
+        sortModePost.put(PostViewMode.EARLY, postRepository::findPostsOrderByDateAsc);
+    }
 
     private PostDTO buildDTO(Post post) {
         return PostDTO.builder()
+                .id(post.getId())
                 .time(post.getTime().toInstant().getEpochSecond())
                 .user(UserDTO.builder()
                         .id(post.getUser().getId())
@@ -67,7 +115,7 @@ public class PostsService {
 
     private String getAnounce(String text) {
         String textWithoutHtml = Jsoup.parse(text).text();
-        return textWithoutHtml.length()>150 ? textWithoutHtml.substring(0, 150)+"...":textWithoutHtml+"...";
+        return textWithoutHtml.length() > 150 ? textWithoutHtml.substring(0, 150) + "..." : textWithoutHtml + "...";
     }
 
     private int sumCountVotes(Collection<PostVotes> postVotes, boolean like) {

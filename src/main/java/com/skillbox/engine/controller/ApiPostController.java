@@ -1,29 +1,24 @@
 package com.skillbox.engine.controller;
 
-import com.skillbox.engine.api.response.CalendarResponse;
+import com.skillbox.engine.api.response.PostDetailResponse;
 import com.skillbox.engine.api.response.PostResponse;
-import com.skillbox.engine.api.response.TagResponse;
-import com.skillbox.engine.model.DTO.PostDTO;
-import com.skillbox.engine.service.PostsService;
-import com.skillbox.engine.service.TagsService;
+import com.skillbox.engine.exception.NotFoundException;
+import com.skillbox.engine.service.PostService;
+import com.skillbox.engine.service.TagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
-
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/post")
 public class ApiPostController {
-    private final PostsService postsService;
-    private final TagsService tagsService;
+    private final PostService postsService;
+    private final TagService tagsService;
 
 
-    @GetMapping("/post")
+    @GetMapping()
     public ResponseEntity<PostResponse> getPosts(@RequestParam(defaultValue = "0", value = "offset") int offSet,
                                                  @RequestParam(defaultValue = "10", value = "limit") int limit,
                                                  @RequestParam(defaultValue = "recent", value = "mode") String mode) {
@@ -31,13 +26,8 @@ public class ApiPostController {
         return ResponseEntity.ok(postResponse);
     }
 
-    @GetMapping("/tag")
-    public ResponseEntity<TagResponse> getTag() {
-        TagResponse tagResponse = tagsService.getAllTags();
-        return ResponseEntity.ok(tagResponse);
-    }
 
-    @GetMapping("/post/search")
+    @GetMapping("/search")
     public ResponseEntity<PostResponse> getSearchPosts(@RequestParam(defaultValue = "0", value = "offset") int offSet,
                                                        @RequestParam(defaultValue = "10", value = "limit") int limit,
                                                        @RequestParam(defaultValue = "", value = "query") String query) {
@@ -46,29 +36,32 @@ public class ApiPostController {
     }
 
 
-    @GetMapping("/calendar")
-    public ResponseEntity<CalendarResponse> getCalendar(@RequestParam(defaultValue = "0", value = "year") int year) {
-        if (year == 0) {
-            year = LocalDate.now().getYear();
-        }
-        CalendarResponse calendarResponse = postsService.getCalendar(year);
-        return ResponseEntity.ok(calendarResponse);
-    }
-
-    @GetMapping("/post/byDate")
+    @GetMapping("/byDate")
     public ResponseEntity<PostResponse> getAllPostsOnTheDate(@RequestParam(defaultValue = "0", value = "offset") int offSet,
-                                                 @RequestParam(defaultValue = "10", value = "limit") int limit,
-                                                 @RequestParam( value = "date") String date) {
+                                                             @RequestParam(defaultValue = "10", value = "limit") int limit,
+                                                             @RequestParam(value = "date") String date) {
         PostResponse postResponse = postsService.getAllPostsOnTheDate(offSet, limit, date);
         return ResponseEntity.ok(postResponse);
     }
 
-    @GetMapping("/post/byTag")
+    @GetMapping("/byTag")
     public ResponseEntity<PostResponse> getAllPostsByTag(@RequestParam(defaultValue = "0", value = "offset") int offSet,
-                                                             @RequestParam(defaultValue = "10", value = "limit") int limit,
-                                                             @RequestParam( value = "tag") String tag) {
+                                                         @RequestParam(defaultValue = "10", value = "limit") int limit,
+                                                         @RequestParam(value = "tag") String tag) {
         PostResponse postResponse = postsService.getPostsByTag(offSet, limit, tag);
         return ResponseEntity.ok(postResponse);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity getPostById(@PathVariable int id) {
+        PostDetailResponse postDetailResponse;
+        try {
+            postDetailResponse = postsService.getPostById(id);
+        } catch (NotFoundException e) {
+            return new ResponseEntity(e.getMessage(),HttpStatus.NOT_FOUND);
+        }
+
+        return ResponseEntity.ok(postDetailResponse);
     }
 
 }

@@ -1,10 +1,14 @@
 package com.skillbox.engine.service;
 
 import com.skillbox.engine.api.response.CalendarResponse;
+import com.skillbox.engine.api.response.PostDetailResponse;
 import com.skillbox.engine.api.response.PostResponse;
+import com.skillbox.engine.exception.NotFoundException;
 import com.skillbox.engine.model.DTO.*;
 import com.skillbox.engine.model.entity.Post;
+import com.skillbox.engine.model.entity.PostComment;
 import com.skillbox.engine.model.entity.PostVotes;
+import com.skillbox.engine.model.entity.Tag;
 import com.skillbox.engine.model.enums.PostViewMode;
 import com.skillbox.engine.repository.PostRepository;
 import org.jsoup.Jsoup;
@@ -15,16 +19,66 @@ import org.springframework.stereotype.Service;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class PostsService {
+public class PostService {
     private final PostRepository postRepository;
+    private final Tag2PostService tag2PostService;
+    private final PostCommentService postCommentService;
     private final HashMap<PostViewMode, SortModePost> sortModePost = new HashMap<>();
+    private final UserService userService;
 
-    public PostsService(PostRepository postRepository) {
+    public PostService(PostRepository postRepository,
+                       Tag2PostService tag2PostService,
+                       PostCommentService postCommentService,
+                       UserService userService) {
         this.postRepository = postRepository;
+        this.tag2PostService = tag2PostService;
+        this.postCommentService = postCommentService;
+        this.userService = userService;
         initSort();
+    }
+
+    public PostDetailResponse getPostById(int postId) throws NotFoundException {
+
+        Optional<Post> postResult = postRepository.findPostByIdAndIsActiveAndModerationStatus(postId);
+
+        Post post = postResult.orElseThrow(() -> new NotFoundException("Запись с id: " + postId + " не найдена"));
+
+        List<Tag> tags = tag2PostService.getPostTags(postId);
+        List<PostComment> postComments = postCommentService.getPostCommentsByPostId(postId);
+        int viewCount = post.getViewCount();
+        post.setViewCount(++viewCount);
+        postRepository.save(post);
+        return buildPostDetailResponse(post, tags, postComments);
+    }
+
+    private PostDetailResponse buildPostDetailResponse(Post post, List<Tag> tags, List<PostComment> postComments) {
+        return PostDetailResponse.builder()
+                .id(post.getId())
+                .time(post.getTime().toInstant().getEpochSecond())
+                .user(userService.buildUserDTO(post.getUser()))
+                .title(post.getTitle())
+                .text(post.getText())
+                .likeCount(sumCountVotes(post.getPostVotes(), true))
+                .active(post.getIsActive() == 1)
+                .dislikeCount(sumCountVotes(post.getPostVotes(), false))
+                .viewCount(post.getViewCount())
+                .tags(getTags(tags))
+                .comments(getComments(postComments))
+                .build();
+    }
+
+    private Collection<CommentDTO> getComments(List<PostComment> postComments) {
+        return postComments.stream()
+                .map(postCommentService::buildCommentTDO)
+                .collect(Collectors.toList());
+    }
+
+    private Collection<String> getTags(List<Tag> tags) {
+        return tags.stream().map(Tag::getName).collect(Collectors.toList());
     }
 
     public PostResponse getSearchPost(int offset, int limit, String query) {
@@ -49,12 +103,17 @@ public class PostsService {
         List<CalendarYearDTO> calendarYearDTOList = postRepository.getYearsOfPosts();
         List<CalendarDatePostCount> calendarDatePostCountList = postRepository.getTheCountOfPostsByDateOfPosts(year);
 
+        return buildCalendarResponse(calendarYearDTOList, calendarDatePostCountList);
+    }
+
+    private CalendarResponse buildCalendarResponse(List<CalendarYearDTO> calendarYearDTOList,
+                                                   List<CalendarDatePostCount> calendarDatePostCountList) {
         return CalendarResponse.builder()
                 .years(calendarYearDTOList.stream()
                         .map(CalendarYearDTO::getYear)
                         .collect(Collectors.toList()))
                 .posts(calendarDatePostCountList.stream()
-                        .collect(Collectors.toMap(CalendarDatePostCount::getDate,CalendarDatePostCount::getCount)))
+                        .collect(Collectors.toMap(CalendarDatePostCount::getDate, CalendarDatePostCount::getCount)))
                 .build();
     }
 
@@ -80,7 +139,7 @@ public class PostsService {
 
     private List<PostDTO> getPostDTOS(Page<Post> posts) {
         return posts.getContent().stream()
-                .map(this::buildDTO)
+                .map(this::buildPostDTO)
                 .collect(Collectors.toList());
     }
 
@@ -96,14 +155,11 @@ public class PostsService {
         sortModePost.put(PostViewMode.EARLY, postRepository::findPostsOrderByDateAsc);
     }
 
-    private PostDTO buildDTO(Post post) {
+    private PostDTO buildPostDTO(Post post) {
         return PostDTO.builder()
                 .id(post.getId())
                 .time(post.getTime().toInstant().getEpochSecond())
-                .user(UserDTO.builder()
-                        .id(post.getUser().getId())
-                        .name(post.getUser().getName())
-                        .build())
+                .user(userService.buildUserDTO(post.getUser()))
                 .title(post.getTitle())
                 .announce(getAnounce(post.getText()))
                 .likeCount(sumCountVotes(post.getPostVotes(), true))
@@ -117,6 +173,7 @@ public class PostsService {
         String textWithoutHtml = Jsoup.parse(text).text();
         return textWithoutHtml.length() > 150 ? textWithoutHtml.substring(0, 150) + "..." : textWithoutHtml + "...";
     }
+
 
     private int sumCountVotes(Collection<PostVotes> postVotes, boolean like) {
         if (like)

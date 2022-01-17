@@ -1,6 +1,7 @@
 package com.skillbox.engine.repository;
 
 import com.skillbox.engine.model.DTO.TagResponseRepository;
+import com.skillbox.engine.model.entity.Tag;
 import com.skillbox.engine.model.entity.Tag2Post;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -22,4 +23,7 @@ public interface Tag2PostRepository extends JpaRepository<Tag2Post, Integer> {
             "WHERE tp.post.isActive = 1 and " +
             "tp.post.moderationStatus=com.skillbox.engine.model.enums.PostModerationStatus.ACCEPTED ")
     long countOfActivePostOnTags();
+
+    @Query("select t.tag from Tag2Post t where t.post.id = :postId")
+    List<Tag> getTagsByPostId(Integer postId);
 }

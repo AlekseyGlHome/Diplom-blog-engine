@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Getter
@@ -27,7 +28,7 @@ public class PostComment {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
     @Column(name = "time", nullable = false)
-    private LocalDateTime time;
+    private Timestamp time;
     @Column(name = "text", nullable = false, columnDefinition = "TEXT")
     private String text;
 

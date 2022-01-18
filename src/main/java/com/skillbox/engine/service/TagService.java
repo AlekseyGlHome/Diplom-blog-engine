@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class TagsService {
+public class TagService {
 
     private final TagRepository tagRepository;
     private final Tag2PostService tag2PostService;

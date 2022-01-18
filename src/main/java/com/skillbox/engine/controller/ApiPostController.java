@@ -1,44 +1,67 @@
 package com.skillbox.engine.controller;
 
+import com.skillbox.engine.api.response.PostDetailResponse;
 import com.skillbox.engine.api.response.PostResponse;
-import com.skillbox.engine.api.response.TagResponse;
-import com.skillbox.engine.model.DTO.PostDTO;
-import com.skillbox.engine.service.PostsService;
-import com.skillbox.engine.service.TagsService;
+import com.skillbox.engine.exception.NotFoundException;
+import com.skillbox.engine.service.PostService;
+import com.skillbox.engine.service.TagService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
-
+@RequiredArgsConstructor
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/post")
 public class ApiPostController {
-    private final PostsService postsService;
-    private final TagsService tagsService;
-
-    public ApiPostController(PostsService postsService, TagsService tagsService) {
-        this.postsService = postsService;
-        this.tagsService = tagsService;
-    }
+    private final PostService postsService;
+    private final TagService tagsService;
 
 
-    @GetMapping("/post")
+    @GetMapping()
     public ResponseEntity<PostResponse> getPosts(@RequestParam(defaultValue = "0", value = "offset") int offSet,
-                                   @RequestParam(defaultValue = "10", value = "limit") int limit,
-                                   @RequestParam(defaultValue = "recent", value = "mode") String mode) {
-
-        PostResponse postResponse = postsService.getAllPosts(offSet,limit,mode);
-
+                                                 @RequestParam(defaultValue = "10", value = "limit") int limit,
+                                                 @RequestParam(defaultValue = "recent", value = "mode") String mode) {
+        PostResponse postResponse = postsService.getAllPosts(offSet, limit, mode);
         return ResponseEntity.ok(postResponse);
     }
 
-    @GetMapping("/tag")
-    public ResponseEntity<TagResponse> getTag() {
-        TagResponse tagResponse = tagsService.getAllTags();
 
-        return ResponseEntity.ok(tagResponse);
+    @GetMapping("/search")
+    public ResponseEntity<PostResponse> getSearchPosts(@RequestParam(defaultValue = "0", value = "offset") int offSet,
+                                                       @RequestParam(defaultValue = "10", value = "limit") int limit,
+                                                       @RequestParam(defaultValue = "", value = "query") String query) {
+        PostResponse postResponse = postsService.getSearchPost(offSet, limit, query);
+        return ResponseEntity.ok(postResponse);
+    }
+
+
+    @GetMapping("/byDate")
+    public ResponseEntity<PostResponse> getAllPostsOnTheDate(@RequestParam(defaultValue = "0", value = "offset") int offSet,
+                                                             @RequestParam(defaultValue = "10", value = "limit") int limit,
+                                                             @RequestParam(value = "date") String date) {
+        PostResponse postResponse = postsService.getAllPostsOnTheDate(offSet, limit, date);
+        return ResponseEntity.ok(postResponse);
+    }
+
+    @GetMapping("/byTag")
+    public ResponseEntity<PostResponse> getAllPostsByTag(@RequestParam(defaultValue = "0", value = "offset") int offSet,
+                                                         @RequestParam(defaultValue = "10", value = "limit") int limit,
+                                                         @RequestParam(value = "tag") String tag) {
+        PostResponse postResponse = postsService.getPostsByTag(offSet, limit, tag);
+        return ResponseEntity.ok(postResponse);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity getPostById(@PathVariable int id) {
+        PostDetailResponse postDetailResponse;
+        try {
+            postDetailResponse = postsService.getPostById(id);
+        } catch (NotFoundException e) {
+            return new ResponseEntity(e.getMessage(),HttpStatus.NOT_FOUND);
+        }
+
+        return ResponseEntity.ok(postDetailResponse);
     }
 
 }

@@ -10,7 +10,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class SettintgsService {
+public class SettintgService {
     private final GlobalSettingsRepository globalSettingsRepository;
 
     public SettingsResponse getGlobalSettings() {

@@ -5,12 +5,10 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd"
         objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
-    <changeSet id="V2" author="Aleksey">
-        <tagDatabase tag="insert-test-data"/>
+    <changeSet id="V2-4" author="Aleksey">
+        <sql>
+            UPDATE tags set name='C sharp' where name = 'C#'
+        </sql>
+
     </changeSet>
-    <include file="db/changelog/changes/V2/0001-insert-data.xml"/>
-    <include file="db/changelog/changes/V2/0002-insert-tst-data.xml"/>
-    <include file="db/changelog/changes/V2/0003-insert-tst-data.xml"/>
-    <include file="db/changelog/changes/V2/0004-update-tags.xml"/>
-    <include file="db/changelog/changes/V2/0005-update-user.xml"/>
 </databaseChangeLog>

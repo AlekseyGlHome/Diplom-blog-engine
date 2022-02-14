@@ -8,7 +8,10 @@ import com.skillbox.engine.service.TagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 
 @RequiredArgsConstructor
 @RestController
@@ -53,15 +56,26 @@ public class ApiPostController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity getPostById(@PathVariable int id) {
+    public ResponseEntity<?> getPostById(@PathVariable int id) {
         PostDetailResponse postDetailResponse;
         try {
             postDetailResponse = postsService.getPostById(id);
         } catch (NotFoundException e) {
-            return new ResponseEntity(e.getMessage(),HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
         return ResponseEntity.ok(postDetailResponse);
+    }
+
+    @GetMapping("/my")
+    @PreAuthorize("hasAuthority('user:moderate')||hasAuthority('user:write')")
+    public ResponseEntity<PostResponse> getMyPost(Principal principal,
+            @RequestParam(defaultValue = "0", value = "offset") int offSet,
+            @RequestParam(defaultValue = "10", value = "limit") int limit,
+            @RequestParam(defaultValue = "inactive", value = "status") String status) {
+
+        PostResponse postResponse = postsService.getMyPosts(offSet, limit, status, principal.getName());
+        return ResponseEntity.ok(postResponse);
     }
 
 }

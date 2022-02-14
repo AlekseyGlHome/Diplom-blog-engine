@@ -5,15 +5,14 @@ import com.skillbox.engine.api.response.PostDetailResponse;
 import com.skillbox.engine.api.response.PostResponse;
 import com.skillbox.engine.exception.NotFoundException;
 import com.skillbox.engine.model.DTO.*;
-import com.skillbox.engine.model.entity.Post;
-import com.skillbox.engine.model.entity.PostComment;
-import com.skillbox.engine.model.entity.PostVotes;
-import com.skillbox.engine.model.entity.Tag;
+import com.skillbox.engine.model.entity.*;
+import com.skillbox.engine.model.enums.ModerationStatus;
 import com.skillbox.engine.model.enums.PostViewMode;
 import com.skillbox.engine.repository.PostRepository;
 import org.jsoup.Jsoup;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -28,6 +27,7 @@ public class PostService {
     private final Tag2PostService tag2PostService;
     private final PostCommentService postCommentService;
     private final HashMap<PostViewMode, SortModePost> sortModePost = new HashMap<>();
+    private final HashMap<ModerationStatus, SortModeMyPost> sortModeMyPost = new HashMap<>();
     private final UserService userService;
 
     public PostService(PostRepository postRepository,
@@ -53,6 +53,59 @@ public class PostService {
         post.setViewCount(++viewCount);
         postRepository.save(post);
         return buildPostDetailResponse(post, tags, postComments);
+    }
+
+
+    public long numberOfPostsForMoreration() {
+        return postRepository.countByModerationStatusNew();
+    }
+
+    public PostResponse getSearchPost(int offset, int limit, String query) {
+        if (query.isBlank() || query.isEmpty()) {
+            return getAllPosts(offset, limit, "recent");
+        }
+        PageRequest pageRequest = getPageRequest(offset, limit);
+        Page<Post> posts = postRepository.SearchesByPostsSortByDateDesc(pageRequest, query.trim());
+        List<PostDTO> postsDTO = getPostDTOS(posts);
+        return getPostResponse(posts.getTotalElements(), postsDTO);
+    }
+
+    public PostResponse getAllPosts(int offset, int limit, String mode) {
+        PostViewMode viewMode = PostViewMode.valueOf(mode.toUpperCase());
+        PageRequest pageRequest = getPageRequest(offset, limit);
+        Page<Post> posts = sortModePost.get(viewMode).sort(pageRequest);
+        List<PostDTO> postsDTO = getPostDTOS(posts);
+        return getPostResponse(posts.getTotalElements(), postsDTO);
+    }
+
+    public PostResponse getMyPosts(int offset, int limit, String status, String userName) {
+        Optional<User> currentUser = userService.findByEmail(userName);
+        ModerationStatus moderationStatus = ModerationStatus.valueOf(status.toUpperCase());
+        PageRequest pageRequest = getPageRequest(offset, limit);
+        Page<Post> posts = sortModeMyPost.get(moderationStatus).sort(pageRequest, currentUser.get().getId());
+        List<PostDTO> postsDTO = getPostDTOS(posts);
+        return getPostResponse(posts.getTotalElements(), postsDTO);
+    }
+
+    public CalendarResponse getCalendar(int year) {
+        List<CalendarYearDTO> calendarYearDTOList = postRepository.getYearsOfPosts();
+        List<CalendarDatePostCount> calendarDatePostCountList = postRepository.getTheCountOfPostsByDateOfPosts(year);
+
+        return buildCalendarResponse(calendarYearDTOList, calendarDatePostCountList);
+    }
+
+    public PostResponse getAllPostsOnTheDate(int offSet, int limit, String date) {
+        PageRequest pageRequest = getPageRequest(offSet, limit);
+        Page<Post> posts = postRepository.findAllPostsOnTheDate(pageRequest, date);
+        List<PostDTO> postsDTO = getPostDTOS(posts);
+        return getPostResponse(posts.getTotalElements(), postsDTO);
+    }
+
+    public PostResponse getPostsByTag(int offSet, int limit, String tag) {
+        PageRequest pageRequest = getPageRequest(offSet, limit);
+        Page<Post> posts = postRepository.findPostsByTag(pageRequest, tag);
+        List<PostDTO> postsDTO = getPostDTOS(posts);
+        return getPostResponse(posts.getTotalElements(), postsDTO);
     }
 
     private PostDetailResponse buildPostDetailResponse(Post post, List<Tag> tags, List<PostComment> postComments) {
@@ -81,31 +134,6 @@ public class PostService {
         return tags.stream().map(Tag::getName).collect(Collectors.toList());
     }
 
-    public PostResponse getSearchPost(int offset, int limit, String query) {
-        if (query.isBlank() || query.isEmpty()) {
-            return getAllPosts(offset, limit, "recent");
-        }
-        PageRequest pageRequest = getPageRequest(offset, limit);
-        Page<Post> posts = postRepository.SearchesByPostsSortByDateDesc(pageRequest, query.trim());
-        List<PostDTO> postsDTO = getPostDTOS(posts);
-        return getPostResponse(posts.getTotalElements(), postsDTO);
-    }
-
-    public PostResponse getAllPosts(int offset, int limit, String mode) {
-        PostViewMode viewMode = PostViewMode.valueOf(mode.toUpperCase());
-        PageRequest pageRequest = getPageRequest(offset, limit);
-        Page<Post> posts = sortModePost.get(viewMode).sort(pageRequest);
-        List<PostDTO> postsDTO = getPostDTOS(posts);
-        return getPostResponse(posts.getTotalElements(), postsDTO);
-    }
-
-    public CalendarResponse getCalendar(int year) {
-        List<CalendarYearDTO> calendarYearDTOList = postRepository.getYearsOfPosts();
-        List<CalendarDatePostCount> calendarDatePostCountList = postRepository.getTheCountOfPostsByDateOfPosts(year);
-
-        return buildCalendarResponse(calendarYearDTOList, calendarDatePostCountList);
-    }
-
     private CalendarResponse buildCalendarResponse(List<CalendarYearDTO> calendarYearDTOList,
                                                    List<CalendarDatePostCount> calendarDatePostCountList) {
         return CalendarResponse.builder()
@@ -115,20 +143,6 @@ public class PostService {
                 .posts(calendarDatePostCountList.stream()
                         .collect(Collectors.toMap(CalendarDatePostCount::getDate, CalendarDatePostCount::getCount)))
                 .build();
-    }
-
-    public PostResponse getAllPostsOnTheDate(int offSet, int limit, String date) {
-        PageRequest pageRequest = getPageRequest(offSet, limit);
-        Page<Post> posts = postRepository.findAllPostsOnTheDate(pageRequest, date);
-        List<PostDTO> postsDTO = getPostDTOS(posts);
-        return getPostResponse(posts.getTotalElements(), postsDTO);
-    }
-
-    public PostResponse getPostsByTag(int offSet, int limit, String tag) {
-        PageRequest pageRequest = getPageRequest(offSet, limit);
-        Page<Post> posts = postRepository.findPostsByTag(pageRequest, tag);
-        List<PostDTO> postsDTO = getPostDTOS(posts);
-        return getPostResponse(posts.getTotalElements(), postsDTO);
     }
 
     private PostResponse getPostResponse(long countTotalElements, List<PostDTO> postsDTO) {
@@ -153,6 +167,12 @@ public class PostService {
         sortModePost.put(PostViewMode.POPULAR, postRepository::findPostsOrderByComment);
         sortModePost.put(PostViewMode.BEST, postRepository::findPostsOrderByLikes);
         sortModePost.put(PostViewMode.EARLY, postRepository::findPostsOrderByDateAsc);
+
+        sortModeMyPost.put(ModerationStatus.INACTIVE, postRepository::findMyPostsInactiveOrderByDateDesc);
+        sortModeMyPost.put(ModerationStatus.PENDING, postRepository::findMyPostsPendingOrderByDateDesc);
+        sortModeMyPost.put(ModerationStatus.DECLINED, postRepository::findMyPostsDeclinedOrderByDateDesc);
+        sortModeMyPost.put(ModerationStatus.PUBLISHED, postRepository::findMyPostsPublishedOrderByDateDesc);
+
     }
 
     private PostDTO buildPostDTO(Post post) {

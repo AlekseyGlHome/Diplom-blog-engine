@@ -2,19 +2,28 @@ package com.skillbox.engine.service;
 
 import com.github.cage.Cage;
 import com.github.cage.GCage;
-import com.skillbox.engine.api.request.UserRequest;
-import com.skillbox.engine.api.response.CaptchaResponse;
-import com.skillbox.engine.api.response.UserErrorRegister;
-import com.skillbox.engine.api.response.UserRegisterResponse;
+import com.skillbox.engine.api.request.UserLoginRequest;
+import com.skillbox.engine.api.request.UserRegistrRequest;
+import com.skillbox.engine.api.response.*;
 import com.skillbox.engine.model.entity.CaptchaCode;
 import com.skillbox.engine.repository.CaptchaRepository;
 import lombok.RequiredArgsConstructor;
 import org.imgscalr.Scalr;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,6 +38,9 @@ import java.util.UUID;
 public class AuthService {
     private final CaptchaRepository captchaRepository;
     private final UserService userService;
+    private final AuthenticationManager authenticationManager;
+    private final PostService postService;
+
     private final Random random = new Random();
 
     @Value("${config.Captcha.StorageTime}")
@@ -39,6 +51,62 @@ public class AuthService {
 
     @Value("${config.Captcha.Width}")
     private int captchaWidth;
+
+    public LoginRespons logout(HttpServletRequest request, HttpServletResponse response) {
+        SecurityContextHolder.clearContext();
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        for (Cookie cookie : request.getCookies()) {
+            cookie.setValue("");
+            cookie.setPath("/");
+            cookie.setMaxAge(0);
+            response.addCookie(cookie);
+        }
+        LoginRespons loginRespons = new LoginRespons();
+        loginRespons.setResult(true);
+        return loginRespons;
+    }
+
+    public LoginRespons getAuthentication(UserLoginRequest userLoginRequest) {
+        Authentication auth = authenticationManager
+                .authenticate(new UsernamePasswordAuthenticationToken(userLoginRequest.getEmail(),
+                        userLoginRequest.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(auth);
+        User user = (User) auth.getPrincipal();
+        return getLoginRespons(user.getUsername());
+    }
+
+    public LoginRespons getLoginRespons(String email) {
+        com.skillbox.engine.model.entity.User userEntity = userService.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("user " + email + " not found"));
+        LoginRespons loginRespons = new LoginRespons();
+        loginRespons.setResult(true);
+        UserLoginRespons userLoginRespons = buildUserLoginRespons(userEntity);
+
+        loginRespons.setUserLoginRespons(userLoginRespons);
+        return loginRespons;
+    }
+
+    private UserLoginRespons buildUserLoginRespons(com.skillbox.engine.model.entity.User userEntity) {
+        return UserLoginRespons.builder()
+                .id(userEntity.getId())
+                .name(userEntity.getName())
+                .photo(userEntity.getPhoto())
+                .email(userEntity.getEmail())
+                .moderation(userEntity.getModeration())
+                .moderationCount(getModerationCount(userEntity.getModeration()))
+                .settings(userEntity.getModeration())
+                .build();
+    }
+
+    private long getModerationCount(boolean isModeration){
+        if (isModeration){
+            return postService.numberOfPostsForMoreration();
+        }
+        return 0;
+    }
 
     public CaptchaResponse getCaptcha() throws IOException {
         String secretCode = UUID.randomUUID().toString().replaceAll("-", "");
@@ -53,42 +121,42 @@ public class AuthService {
         return new CaptchaResponse(secretCode, image);
     }
 
-    public UserRegisterResponse checkingUserRegistration(UserRequest userRequest){
+    public UserRegisterResponse checkingUserRegistration(UserRegistrRequest userRegistrRequest) {
         deleteOldCaptcha();
-        return errorChecking(userRequest);
+        return errorChecking(userRegistrRequest);
     }
 
-    private UserRegisterResponse errorChecking(UserRequest userRequest){
+    private UserRegisterResponse errorChecking(UserRegistrRequest userRegistrRequest) {
         UserErrorRegister userErrorRegister = new UserErrorRegister();
         UserRegisterResponse userRegisterResponse = new UserRegisterResponse();
-        int error=0;
-        if (userService.findEmail(userRequest.getEmail())>0){
+        int error = 0;
+        if (userService.findCountEmail(userRegistrRequest.getEmail()) > 0) {
             userErrorRegister.setEmail("Этот e-mail уже зарегистрирован");
             error++;
         }
-        Optional<CaptchaCode> captchaCode = captchaRepository.findBySecretCodeEquals(userRequest.getCaptchaSecret());
-        if (captchaCode.isEmpty()){
+        Optional<CaptchaCode> captchaCode = captchaRepository.findBySecretCodeEquals(userRegistrRequest.getCaptchaSecret());
+        if (captchaCode.isEmpty()) {
             userErrorRegister.setCaptcha("Код просрочен");
             error++;
-        }else{
-            if (!captchaCode.get().getCode().equals(userRequest.getCaptcha())){
+        } else {
+            if (!captchaCode.get().getCode().equalsIgnoreCase(userRegistrRequest.getCaptcha())) {
                 userErrorRegister.setCaptcha("Код с картинки введён неверно");
                 error++;
             }
         }
-        if (userRequest.getName().isEmpty() || userRequest.getName().isBlank()){
+        if (userRegistrRequest.getName().isEmpty() || userRegistrRequest.getName().isBlank()) {
             userErrorRegister.setName("Имя указано неверно");
             error++;
         }
-        if (userRequest.getPassword().length()<6){
+        if (userRegistrRequest.getPassword().length() < 6) {
             userErrorRegister.setPassword("Пароль короче 6-ти символов");
             error++;
         }
-        if (error>0){
+        if (error > 0) {
             userRegisterResponse.setResult(false);
-        }else {
+        } else {
             userRegisterResponse.setResult(true);
-            userService.addUser(userRequest);
+            userService.addUser(userRegistrRequest);
         }
         userRegisterResponse.setErrors(userErrorRegister);
         return userRegisterResponse;
@@ -103,7 +171,7 @@ public class AuthService {
         Cage gCage = new GCage();
         BufferedImage bufferedImage = gCage.drawImage(captchaText);
         String image = "data:image/".concat(gCage.getFormat()).concat(";base64,");
-        image +=Base64.getEncoder().encodeToString(resizeCaptcha(bufferedImage,gCage.getFormat()).toByteArray());
+        image += Base64.getEncoder().encodeToString(resizeCaptcha(bufferedImage, gCage.getFormat()).toByteArray());
         return image;
     }
 

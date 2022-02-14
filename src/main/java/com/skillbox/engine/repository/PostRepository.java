@@ -3,10 +3,12 @@ package com.skillbox.engine.repository;
 import com.skillbox.engine.model.DTO.CalendarDatePostCount;
 import com.skillbox.engine.model.DTO.CalendarYearDTO;
 import com.skillbox.engine.model.entity.Post;
+import com.skillbox.engine.model.enums.PostModerationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -49,6 +51,50 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             "ORDER BY p.time DESC"
     )
     Page<Post> findPostsOrderByDateDesc(Pageable pageable);
+
+    @Query("SELECT p " +
+            "FROM Post p " +
+            "LEFT JOIN User u ON u.id = p.user " +
+            "WHERE p.isActive = 0 " +
+            "AND u.id=:userId " +
+            "GROUP BY p.id " +
+            "ORDER BY p.time DESC"
+    )
+    Page<Post> findMyPostsInactiveOrderByDateDesc(Pageable pageable, int userId);
+
+    @Query("SELECT p " +
+            "FROM Post p " +
+            "LEFT JOIN User u ON u.id = p.user " +
+            "WHERE p.isActive = 1 " +
+            "and p.moderationStatus = com.skillbox.engine.model.enums.PostModerationStatus.NEW " +
+            "AND u.id=:userId " +
+            "GROUP BY p.id " +
+            "ORDER BY p.time DESC"
+    )
+    Page<Post> findMyPostsPendingOrderByDateDesc(Pageable pageable, int userId);
+
+    @Query("SELECT p " +
+            "FROM Post p " +
+            "LEFT JOIN User u ON u.id = p.user " +
+            "WHERE p.isActive = 1 " +
+            "and p.moderationStatus = com.skillbox.engine.model.enums.PostModerationStatus.DECLINED " +
+            "AND u.id=:userId " +
+            "GROUP BY p.id " +
+            "ORDER BY p.time DESC"
+    )
+    Page<Post> findMyPostsDeclinedOrderByDateDesc(Pageable pageable, int userId);
+
+    @Query("SELECT p " +
+            "FROM Post p " +
+            "LEFT JOIN User u ON u.id = p.user " +
+            "WHERE p.isActive = 1 " +
+            "and p.moderationStatus = com.skillbox.engine.model.enums.PostModerationStatus.ACCEPTED " +
+            "AND u.id=:userId " +
+            "GROUP BY p.id " +
+            "ORDER BY p.time DESC"
+    )
+    Page<Post> findMyPostsPublishedOrderByDateDesc(Pageable pageable, int userId);
+
 
     @Query("SELECT p " +
             "FROM Post p " +
@@ -114,9 +160,14 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 
     @Query("select p from Post p " +
             "where p.id = :postId " +
-            "and p.isActive = 1" +
+            "and p.isActive = 1 " +
             "and p.moderationStatus = com.skillbox.engine.model.enums.PostModerationStatus.ACCEPTED")
-     Optional<Post> findPostByIdAndIsActiveAndModerationStatus(int postId);
+    Optional<Post> findPostByIdAndIsActiveAndModerationStatus(int postId);
+
+    @Query("select count(p) from Post p " +
+            "where p.isActive = 1 " +
+            "and p.moderationStatus = com.skillbox.engine.model.enums.PostModerationStatus.NEW")
+    long countByModerationStatusNew();
 
 
 }

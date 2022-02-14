@@ -1,5 +1,6 @@
 package com.skillbox.engine.model.entity;
 
+import com.skillbox.engine.security.Role;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -26,7 +27,7 @@ public class User {
     @Column(name = "name", nullable = false)
     private String name;
     @Column(name = "email", nullable = false)
-    private String eMail;
+    private String email;
     @Column(name = "password", nullable = false)
     private String password;
     @Column(name = "code")
@@ -36,4 +37,11 @@ public class User {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private Collection<Post> posts = new ArrayList<>();
 
+    public boolean getModeration(){
+        return isModerator == 1;
+    }
+
+    public Role getRole() {
+        return isModerator == 1 ? Role.MODERATOR : Role.USER;
+    }
 }

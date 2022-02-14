@@ -9,6 +9,7 @@ import com.skillbox.engine.service.SettintgService;
 import com.skillbox.engine.service.TagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -31,11 +32,13 @@ public class ApiGeneralController {
     }
 
     @GetMapping("/settings")
+    //@PreAuthorize("hasAuthority('user:write')")
     public ResponseEntity<SettingsResponse> settings() {
         return ResponseEntity.ok(settintgService.getGlobalSettings());
     }
 
     @GetMapping("/tag")
+    //@PreAuthorize("hasAuthority('user:moderate')")
     public ResponseEntity<TagResponse> getTag() {
         TagResponse tagResponse = tagsService.getAllTags();
         return ResponseEntity.ok(tagResponse);

@@ -7,12 +7,12 @@ import com.skillbox.engine.exception.NotFoundException;
 import com.skillbox.engine.model.DTO.*;
 import com.skillbox.engine.model.entity.*;
 import com.skillbox.engine.model.enums.ModerationStatus;
+import com.skillbox.engine.model.enums.PostModerationStatus;
 import com.skillbox.engine.model.enums.PostViewMode;
 import com.skillbox.engine.repository.PostRepository;
 import org.jsoup.Jsoup;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -78,11 +78,28 @@ public class PostService {
         return getPostResponse(posts.getTotalElements(), postsDTO);
     }
 
-    public PostResponse getMyPosts(int offset, int limit, String status, String userName) {
-        Optional<User> currentUser = userService.findByEmail(userName);
+    public PostResponse getPostsModeration(int offset, int limit, String status, String userEmail) throws NotFoundException {
+
+        PageRequest pageRequest = getPageRequest(offset, limit);
+        PostModerationStatus moderationStatus = PostModerationStatus.valueOf(status.toUpperCase());
+        Page<Post> posts;
+        if (moderationStatus == PostModerationStatus.NEW){
+            posts = postRepository.findPostsModerationStatusNew(pageRequest);
+        }else{
+            User currentUser = userService.findByEmail(userEmail)
+                    .orElseThrow(()-> new NotFoundException("user not found"));
+            posts = postRepository.findPostsModerationStatusNotNew(pageRequest, currentUser, moderationStatus);
+        }
+        List<PostDTO> postsDTO = getPostDTOS(posts);
+        return getPostResponse(posts.getTotalElements(), postsDTO);
+    }
+
+    public PostResponse getMyPosts(int offset, int limit, String status, String userEmail) throws NotFoundException {
+        User currentUser = userService.findByEmail(userEmail)
+                .orElseThrow(()-> new NotFoundException("user not found"));
         ModerationStatus moderationStatus = ModerationStatus.valueOf(status.toUpperCase());
         PageRequest pageRequest = getPageRequest(offset, limit);
-        Page<Post> posts = sortModeMyPost.get(moderationStatus).sort(pageRequest, currentUser.get().getId());
+        Page<Post> posts = sortModeMyPost.get(moderationStatus).sort(pageRequest, currentUser.getId());
         List<PostDTO> postsDTO = getPostDTOS(posts);
         return getPostResponse(posts.getTotalElements(), postsDTO);
     }

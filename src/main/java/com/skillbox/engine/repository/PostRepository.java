@@ -3,6 +3,7 @@ package com.skillbox.engine.repository;
 import com.skillbox.engine.model.DTO.CalendarDatePostCount;
 import com.skillbox.engine.model.DTO.CalendarYearDTO;
 import com.skillbox.engine.model.entity.Post;
+import com.skillbox.engine.model.entity.User;
 import com.skillbox.engine.model.enums.PostModerationStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -157,12 +158,35 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
     )
     Page<Post> findPostsByTag(Pageable pageable, String tag);
 
+    @Query("SELECT p " +
+            "FROM Post p " +
+            "LEFT JOIN User u ON u.id = p.user " +
+            "WHERE p.isActive = 1 " +
+            "and p.moderationStatus = com.skillbox.engine.model.enums.PostModerationStatus.NEW " +
+            "GROUP BY p.id " +
+            "ORDER BY p.time ASC"
+    )
+    Page<Post> findPostsModerationStatusNew(Pageable pageable);
+
+    @Query("SELECT p " +
+            "FROM Post p " +
+            "LEFT JOIN User u ON u.id = p.user " +
+            "WHERE p.isActive = 1 " +
+            "and p.moderationStatus = :status " +
+            "AND p.moderator = :user " +
+            "GROUP BY p.id " +
+            "ORDER BY p.time ASC"
+    )
+    Page<Post> findPostsModerationStatusNotNew(Pageable pageable, User user, PostModerationStatus status);
+
 
     @Query("select p from Post p " +
             "where p.id = :postId " +
             "and p.isActive = 1 " +
             "and p.moderationStatus = com.skillbox.engine.model.enums.PostModerationStatus.ACCEPTED")
     Optional<Post> findPostByIdAndIsActiveAndModerationStatus(int postId);
+
+
 
     @Query("select count(p) from Post p " +
             "where p.isActive = 1 " +

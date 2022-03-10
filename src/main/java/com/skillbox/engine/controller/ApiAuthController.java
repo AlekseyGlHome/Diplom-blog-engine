@@ -31,15 +31,8 @@ public class ApiAuthController {
     }
 
     @GetMapping("/captcha")
-    public ResponseEntity<CaptchaResponse> getCaptcha() {
-        CaptchaResponse captchaResponse = null;
-        try {
-            captchaResponse = authService.getCaptcha();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        assert captchaResponse != null;
-        return ResponseEntity.ok(captchaResponse);
+    public ResponseEntity<CaptchaResponse> getCaptcha() throws IOException {
+        return ResponseEntity.ok(authService.getCaptcha());
     }
 
     @PostMapping("/register")

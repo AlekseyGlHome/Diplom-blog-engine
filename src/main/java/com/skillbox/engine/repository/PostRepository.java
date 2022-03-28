@@ -164,7 +164,7 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             "WHERE p.isActive = 1 " +
             "and p.moderationStatus = com.skillbox.engine.model.enums.PostModerationStatus.NEW " +
             "GROUP BY p.id " +
-            "ORDER BY p.time ASC"
+            "ORDER BY p.time DESC"
     )
     Page<Post> findPostsModerationStatusNew(Pageable pageable);
 
@@ -185,6 +185,12 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             "and p.isActive = 1 " +
             "and p.moderationStatus = com.skillbox.engine.model.enums.PostModerationStatus.ACCEPTED")
     Optional<Post> findPostByIdAndIsActiveAndModerationStatus(int postId);
+
+    @Query("select p from Post p " +
+            "where p.id = :postId " +
+            "and (p.isActive = 1 " +
+            "or p.user = :user)")
+    Optional<Post> findPostByIdAndIsActiveOrUserId(int postId, User user);
 
 
 

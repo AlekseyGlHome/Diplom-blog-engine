@@ -1,7 +1,9 @@
 package com.skillbox.engine.controller;
 
+import com.skillbox.engine.api.request.PostRequest;
 import com.skillbox.engine.api.response.PostDetailResponse;
 import com.skillbox.engine.api.response.PostResponse;
+import com.skillbox.engine.api.response.PostUpdateResponse;
 import com.skillbox.engine.exception.NotFoundException;
 import com.skillbox.engine.model.enums.PostModerationStatus;
 import com.skillbox.engine.service.PostService;
@@ -61,8 +63,13 @@ public class ApiPostController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PostDetailResponse> getPostById(@PathVariable int id) throws NotFoundException {
-        return ResponseEntity.ok(postsService.getPostById(id));
+    public ResponseEntity<PostDetailResponse> getPostById(Principal principal, @PathVariable int id)
+            throws NotFoundException {
+        String userEmail = null;
+        if (principal != null) {
+            userEmail = principal.getName();
+        }
+        return ResponseEntity.ok(postsService.getPostById(id, userEmail));
     }
 
     @GetMapping("/my")
@@ -73,7 +80,6 @@ public class ApiPostController {
             @RequestParam(defaultValue = "10", value = "limit") int limit,
             @RequestParam(defaultValue = "inactive", value = "status") String status)
             throws NotFoundException {
-
         PostResponse postResponse = postsService.getMyPosts(offSet, limit, status, principal.getName());
         return ResponseEntity.ok(postResponse);
     }
@@ -86,14 +92,24 @@ public class ApiPostController {
             @RequestParam(defaultValue = "10", value = "limit") int limit,
             @RequestParam(defaultValue = "new", value = "status") String status)
             throws NotFoundException {
-
         PostResponse postResponse = postsService.getPostsModeration(offSet, limit, status, principal.getName());
         return ResponseEntity.ok(postResponse);
     }
 
     @PostMapping()
-    public ResponseEntity<String> addPost() {
+    @PreAuthorize("hasAuthority('user:moderate')||hasAuthority('user:write')")
+    public ResponseEntity<PostUpdateResponse> addPost(Principal principal, @RequestBody PostRequest postRequest)
+            throws NotFoundException {
+        PostUpdateResponse postUpdateResponse = postsService.addPost(principal.getName(), postRequest);
+        return ResponseEntity.ok(postUpdateResponse);
+    }
 
-        return ResponseEntity.ok("");
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('user:moderate')||hasAuthority('user:write')")
+    public ResponseEntity<PostUpdateResponse> editPost(Principal principal, @PathVariable int id,
+                                                       @RequestBody PostRequest postRequest)
+            throws NotFoundException {
+        PostUpdateResponse postUpdateResponse = postsService.editPost(principal.getName(), postRequest, id);
+        return ResponseEntity.ok(postUpdateResponse);
     }
 }

@@ -12,6 +12,7 @@ import org.imgscalr.Scalr;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -70,11 +71,17 @@ public class AuthService {
     }
 
     public LoginRespons getAuthentication(UserLoginRequest userLoginRequest) {
-        Authentication auth = authenticationManager
-                .authenticate(new UsernamePasswordAuthenticationToken(userLoginRequest.getEmail(),
-                        userLoginRequest.getPassword()));
-        SecurityContextHolder.getContext().setAuthentication(auth);
-        User user = (User) auth.getPrincipal();
+        User user;
+        try {
+            Authentication auth = authenticationManager
+                    .authenticate(new UsernamePasswordAuthenticationToken(userLoginRequest.getEmail(),
+                            userLoginRequest.getPassword()));
+            SecurityContextHolder.getContext().setAuthentication(auth);
+            user = (User) auth.getPrincipal();
+        }catch (BadCredentialsException ex){
+            return new LoginRespons();
+        }
+
         return getLoginRespons(user.getUsername());
     }
 

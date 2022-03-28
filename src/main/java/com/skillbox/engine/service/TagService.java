@@ -4,6 +4,7 @@ import com.skillbox.engine.api.response.TagResponse;
 import com.skillbox.engine.model.DTO.TagDTO;
 import com.skillbox.engine.model.DTO.TagResponseRepository;
 
+import com.skillbox.engine.model.entity.Tag;
 import com.skillbox.engine.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -37,5 +38,17 @@ public class TagService {
 
         tagResponse.setTags(tagDTOS);
         return tagResponse;
+    }
+
+
+    public Tag addIfNot(String nameTag) {
+        Optional<Tag> tagOptional = tagRepository.findByName(nameTag);
+        if (tagOptional.isPresent()){
+            return tagOptional.get();
+        }else {
+            Tag tag = new Tag();
+            tag.setName(nameTag);
+            return tagRepository.save(tag);
+        }
     }
 }

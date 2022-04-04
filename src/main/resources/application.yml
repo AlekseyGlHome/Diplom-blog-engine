@@ -32,3 +32,4 @@ config:
     StorageTime: 60
     Height: 35
     Width: 100
+  uploadFile: /home/alexey/uploads

@@ -18,10 +18,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.skillbox.engine.utilities.Utill.convertLongToLocalDateTime;
 
 @Service
 public class PostService {
@@ -70,6 +70,10 @@ public class PostService {
         return buildPostDetailResponse(post, tags, postComments);
     }
 
+    public Optional<Post> getById(int id){
+        return postRepository.findPostByIdAndIsActiveAndModerationStatus(id);
+
+    }
 
     public long numberOfPostsForMoreration() {
         return postRepository.countByModerationStatusNew();
@@ -280,14 +284,14 @@ public class PostService {
         return post;
     }
 
-    private LocalDateTime convertLongToLocalDateTime(Long longTime) {
-        LocalDateTime time = LocalDateTime.ofInstant(Instant.ofEpochSecond(longTime),
-                TimeZone.getDefault().toZoneId());
-        if (time.compareTo(LocalDateTime.now())<1){
-            time = LocalDateTime.now();
-        }
-        return time;
-    }
+//    private LocalDateTime convertLongToLocalDateTime(Long longTime) {
+//        LocalDateTime time = LocalDateTime.ofInstant(Instant.ofEpochSecond(longTime),
+//                TimeZone.getDefault().toZoneId());
+//        if (time.compareTo(LocalDateTime.now())<1){
+//            time = LocalDateTime.now();
+//        }
+//        return time;
+//    }
 
     private Collection<Tag> getTags(PostRequest postRequest) {
         Collection<Tag> tags = new ArrayList<>();

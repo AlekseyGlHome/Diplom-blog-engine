@@ -1,5 +1,6 @@
 package com.skillbox.engine.controller;
 
+import com.skillbox.engine.exception.LoadImageExceprion;
 import com.skillbox.engine.service.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +14,7 @@ import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
-public class ImageController {
+public class ApiImageController {
     @Value("${config.uploadFile}")
     private String uploadFile;
 
@@ -21,10 +22,7 @@ public class ImageController {
 
     @PostMapping("/api/image")
     @PreAuthorize("hasAuthority('user:moderate')||hasAuthority('user:write')")
-    public String uploadFile(@RequestParam("image") MultipartFile file) throws IOException {
-
-
-
+    public String uploadFile(@RequestParam("image") MultipartFile file) throws IOException, LoadImageExceprion {
         return imageService.loadImage(file);
     }
 }

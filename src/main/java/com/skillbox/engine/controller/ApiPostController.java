@@ -5,11 +5,8 @@ import com.skillbox.engine.api.response.PostDetailResponse;
 import com.skillbox.engine.api.response.PostResponse;
 import com.skillbox.engine.api.response.PostUpdateResponse;
 import com.skillbox.engine.exception.NotFoundException;
-import com.skillbox.engine.model.enums.PostModerationStatus;
 import com.skillbox.engine.service.PostService;
-import com.skillbox.engine.service.TagService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +18,6 @@ import java.security.Principal;
 @RequestMapping("/api/post")
 public class ApiPostController {
     private final PostService postsService;
-    private final TagService tagsService;
-
 
     @GetMapping()
     public ResponseEntity<PostResponse> getPosts(
@@ -112,4 +107,6 @@ public class ApiPostController {
         PostUpdateResponse postUpdateResponse = postsService.editPost(principal.getName(), postRequest, id);
         return ResponseEntity.ok(postUpdateResponse);
     }
+
+
 }

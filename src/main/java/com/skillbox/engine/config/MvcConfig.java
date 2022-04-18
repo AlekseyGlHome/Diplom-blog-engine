@@ -7,13 +7,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class MvcConfig implements WebMvcConfigurer {
-    @Value("${config.uploadFile}")
-    private String uploadFile;
+    @Value("${config.endOfFilePath}")
+    private String endOfFilePath;
+
+    @Value("${config.startOfFilePath}")
+    private String startOfFilePath;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/edit/**","/post/**")
-                .addResourceLocations("file://"+ uploadFile + "/");
+        registry.addResourceHandler("/edit/**", "/post/**")
+                .addResourceLocations(startOfFilePath + endOfFilePath + "/");
     }
 
 }

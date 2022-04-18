@@ -1,10 +1,8 @@
 package com.skillbox.engine.service;
 
+import com.skillbox.engine.api.request.ModerationRequest;
 import com.skillbox.engine.api.request.PostRequest;
-import com.skillbox.engine.api.response.CalendarResponse;
-import com.skillbox.engine.api.response.PostDetailResponse;
-import com.skillbox.engine.api.response.PostResponse;
-import com.skillbox.engine.api.response.PostUpdateResponse;
+import com.skillbox.engine.api.response.*;
 import com.skillbox.engine.exception.NotFoundException;
 import com.skillbox.engine.model.DTO.*;
 import com.skillbox.engine.model.entity.*;
@@ -49,28 +47,28 @@ public class PostService {
     public PostDetailResponse getPostById(int postId, String userEmail) throws NotFoundException {
         User user = null;
         Optional<Post> postResult;
-        if (userEmail != null){
-            user = userService.findByEmail(userEmail).orElseThrow(()-> new NotFoundException("user not found"));
+        if (userEmail != null) {
+            user = userService.findByEmail(userEmail).orElseThrow(() -> new NotFoundException("user not found"));
             postResult = postRepository.findPostByIdAndIsActiveOrUserId(postId, user);
-        }else{
+        } else {
             postResult = postRepository.findPostByIdAndIsActiveAndModerationStatus(postId);
         }
         Post post = postResult.orElseThrow(() -> new NotFoundException("Запись с id: " + postId + " не найдена"));
         List<Tag> tags = tag2PostService.getPostTags(postId);
         List<PostComment> postComments = postCommentService.getPostCommentsByPostId(postId);
         int viewCount = post.getViewCount();
-        if (user!=null){
-            if (!user.getModeration() && post.getUser()!=user){
+        if (user != null) {
+            if (!user.getModeration() && post.getUser() != user) {
                 post.setViewCount(++viewCount);
             }
-        }else {
+        } else {
             post.setViewCount(++viewCount);
         }
         postRepository.save(post);
         return buildPostDetailResponse(post, tags, postComments);
     }
 
-    public Optional<Post> getById(int id){
+    public Optional<Post> getById(int id) {
         return postRepository.findPostByIdAndIsActiveAndModerationStatus(id);
 
     }
@@ -102,11 +100,11 @@ public class PostService {
         PageRequest pageRequest = getPageRequest(offset, limit);
         PostModerationStatus moderationStatus = PostModerationStatus.valueOf(status.toUpperCase());
         Page<Post> posts;
-        if (moderationStatus == PostModerationStatus.NEW){
+        if (moderationStatus == PostModerationStatus.NEW) {
             posts = postRepository.findPostsModerationStatusNew(pageRequest);
-        }else{
+        } else {
             User currentUser = userService.findByEmail(userEmail)
-                    .orElseThrow(()-> new NotFoundException("user not found"));
+                    .orElseThrow(() -> new NotFoundException("user not found"));
             posts = postRepository.findPostsModerationStatusNotNew(pageRequest, currentUser, moderationStatus);
         }
         List<PostDTO> postsDTO = getPostDTOS(posts);
@@ -115,7 +113,7 @@ public class PostService {
 
     public PostResponse getMyPosts(int offset, int limit, String status, String userEmail) throws NotFoundException {
         User currentUser = userService.findByEmail(userEmail)
-                .orElseThrow(()-> new NotFoundException("user not found"));
+                .orElseThrow(() -> new NotFoundException("user not found"));
         ModerationStatus moderationStatus = ModerationStatus.valueOf(status.toUpperCase());
         PageRequest pageRequest = getPageRequest(offset, limit);
         Page<Post> posts = sortModeMyPost.get(moderationStatus).sort(pageRequest, currentUser.getId());
@@ -242,7 +240,7 @@ public class PostService {
         PostUpdateResponse postUpdateResponse = new PostUpdateResponse();
         ErrorUpdatePost errorUpdatePost = new ErrorUpdatePost();
         boolean isError = isError(postRequest, errorUpdatePost);
-        if (isError){
+        if (isError) {
             postUpdateResponse.setResult(false);
             postUpdateResponse.setErrors(errorUpdatePost);
             return postUpdateResponse;
@@ -250,29 +248,36 @@ public class PostService {
         postUpdateResponse.setResult(true);
         Post post = createOrUpdatePost(userEmail, postRequest, new Post());
         postRepository.save(post);
-        return  postUpdateResponse;
+        return postUpdateResponse;
     }
 
     public PostUpdateResponse editPost(String userEmail, PostRequest postRequest, int id) throws NotFoundException {
         PostUpdateResponse postUpdateResponse = new PostUpdateResponse();
         ErrorUpdatePost errorUpdatePost = new ErrorUpdatePost();
         boolean isError = isError(postRequest, errorUpdatePost);
-        if (isError){
+        if (isError) {
             postUpdateResponse.setResult(false);
             postUpdateResponse.setErrors(errorUpdatePost);
             return postUpdateResponse;
         }
         postUpdateResponse.setResult(true);
-        Post currentPost = postRepository.findById(id).orElseThrow(()->new NotFoundException("post not found"));
+        Post currentPost = postRepository.findById(id).orElseThrow(() -> new NotFoundException("post not found"));
         Post updatePost = createOrUpdatePost(userEmail, postRequest, currentPost);
         postRepository.save(updatePost);
-        return  postUpdateResponse;
+        return postUpdateResponse;
     }
 
+    public ModerationResponse editModeration(String userName, ModerationRequest moderationRequest) {
+
+        ModerationResponse moderationResponse = new ModerationResponse();
+        return moderationResponse;
+    }
+
+
     private Post createOrUpdatePost(String userEmail, PostRequest postRequest, Post post) throws NotFoundException {
-        User currentUser = userService.findByEmail(userEmail).orElseThrow(()-> new NotFoundException("user not found"));
+        User currentUser = userService.findByEmail(userEmail).orElseThrow(() -> new NotFoundException("user not found"));
         post.setIsActive(postRequest.getActive());
-        if (!currentUser.getModeration()){
+        if (!currentUser.getModeration()) {
             post.setModerationStatus(PostModerationStatus.NEW);
         }
         post.setTime(Timestamp.valueOf(convertLongToLocalDateTime(postRequest.getTimestamp())));
@@ -302,12 +307,12 @@ public class PostService {
     }
 
     private boolean isError(PostRequest postRequest, ErrorUpdatePost errorUpdatePost) {
-        boolean isError=false;
-        if (postRequest.getTitle().length()<3){
+        boolean isError = false;
+        if (postRequest.getTitle().length() < 3) {
             isError = true;
             errorUpdatePost.setTitle("Заголовок не установлен");
         }
-        if (postRequest.getText().length()<50){
+        if (postRequest.getText().length() < 50) {
             isError = true;
             errorUpdatePost.setTitle("Текст публикации слишком короткий");
         }

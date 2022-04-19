@@ -12,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,11 +25,11 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             "LEFT JOIN PostVotes pv on pv.post = p.id and pv.value = 1 " +
             "WHERE p.isActive = 1 " +
             "AND p.moderationStatus = com.skillbox.engine.model.enums.PostModerationStatus.ACCEPTED " +
-            "AND p.time <= CURRENT_DATE() " +
+            "AND p.time <= :timestamp " +
             "GROUP BY p.id " +
             "ORDER BY COUNT(pv) DESC"
     )
-    Page<Post> findPostsOrderByLikes(Pageable pageable);
+    Page<Post> findPostsOrderByLikes(Pageable pageable, Timestamp timestamp);
 
     @Query("SELECT p " +
             "FROM Post p " +
@@ -36,22 +37,22 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             "LEFT JOIN PostComment pc ON pc.post = p.id " +
             "WHERE p.isActive = 1 " +
             "AND p.moderationStatus = com.skillbox.engine.model.enums.PostModerationStatus.ACCEPTED " +
-            "AND p.time <= CURRENT_DATE() " +
+            "AND p.time <= :timestamp " +
             "GROUP BY p.id " +
             "ORDER BY COUNT(pc) DESC"
     )
-    Page<Post> findPostsOrderByComment(Pageable pageable);
+    Page<Post> findPostsOrderByComment(Pageable pageable, Timestamp timestamp);
 
     @Query("SELECT p " +
             "FROM Post p " +
             "LEFT JOIN User u ON u.id = p.user " +
             "WHERE p.isActive = 1 " +
             "AND p.moderationStatus = com.skillbox.engine.model.enums.PostModerationStatus.ACCEPTED " +
-            "AND p.time <= CURRENT_DATE() " +
+            "AND p.time <= :timestamp " +
             "GROUP BY p.id " +
             "ORDER BY p.time DESC"
     )
-    Page<Post> findPostsOrderByDateDesc(Pageable pageable);
+    Page<Post> findPostsOrderByDateDesc(Pageable pageable, Timestamp timestamp);
 
     @Query("SELECT p " +
             "FROM Post p " +
@@ -102,61 +103,61 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
             "LEFT JOIN User u ON u.id = p.user " +
             "WHERE p.isActive = 1 " +
             "AND p.moderationStatus = com.skillbox.engine.model.enums.PostModerationStatus.ACCEPTED " +
-            "AND p.time <= CURRENT_DATE() " +
+            "AND p.time <= :timestamp " +
             "GROUP BY p.id " +
             "ORDER BY p.time ASC"
     )
-    Page<Post> findPostsOrderByDateAsc(Pageable pageable);
+    Page<Post> findPostsOrderByDateAsc(Pageable pageable, Timestamp timestamp);
 
     @Query("SELECT p " +
             "FROM Post p " +
             "LEFT JOIN User u ON u.id = p.user " +
             "WHERE p.isActive = 1 " +
             "AND p.moderationStatus = com.skillbox.engine.model.enums.PostModerationStatus.ACCEPTED " +
-            "AND p.time <= CURRENT_DATE() " +
+            "AND p.time <= :timestamp " +
             "and (p.text like %:query% or p.title like %:query%) " +
             "GROUP BY p.id " +
             "ORDER BY p.time DESC"
     )
-    Page<Post> SearchesByPostsSortByDateDesc(Pageable pageable, String query);
+    Page<Post> SearchesByPostsSortByDateDesc(Pageable pageable, String query, Timestamp timestamp);
 
     @Query("SELECT YEAR(p.time) AS year FROM Post p " +
             "WHERE p.isActive = 1 " +
             "AND p.moderationStatus = com.skillbox.engine.model.enums.PostModerationStatus.ACCEPTED " +
-            "AND p.time <= CURRENT_DATE() " +
+            "AND p.time <= :timestamp " +
             "GROUP BY year ORDER BY year DESC")
-    List<CalendarYearDTO> getYearsOfPosts();
+    List<CalendarYearDTO> getYearsOfPosts(Timestamp timestamp);
 
     @Query("SELECT DATE_FORMAT(p.time,'%Y-%m-%d') as date, COUNT(p.id) as count FROM Post p " +
             "WHERE p.isActive = 1 " +
             "AND p.moderationStatus = com.skillbox.engine.model.enums.PostModerationStatus.ACCEPTED " +
-            "AND p.time <= CURRENT_DATE()  " +
+            "AND p.time <= :timestamp " +
             "AND YEAR(p.time)=:year " +
             "GROUP BY date ORDER BY date DESC")
-    List<CalendarDatePostCount> getTheCountOfPostsByDateOfPosts(int year);
+    List<CalendarDatePostCount> getTheCountOfPostsByDateOfPosts(int year, Timestamp timestamp);
 
     @Query("SELECT p " +
             "FROM Post p " +
             "LEFT JOIN User u ON u.id = p.user " +
             "WHERE p.isActive = 1 " +
             "AND p.moderationStatus = com.skillbox.engine.model.enums.PostModerationStatus.ACCEPTED " +
-            "AND p.time <= CURRENT_DATE() " +
+            "AND p.time <= :timestamp " +
             "AND DATE_FORMAT(p.time,'%Y-%m-%d')>=:date AND DATE_FORMAT(p.time,'%Y-%m-%d')<=:date " +
             "GROUP BY p.id " +
             "ORDER BY p.time DESC"
     )
-    Page<Post> findAllPostsOnTheDate(Pageable pageable, String date);
+    Page<Post> findAllPostsOnTheDate(Pageable pageable, String date, Timestamp timestamp);
 
     @Query("SELECT p FROM Tag2Post tp " +
             "LEFT JOIN Tag t ON t.id  = tp.tag " +
             "LEFT JOIN Post p ON p.id =tp.post " +
             "WHERE t.name =:tag AND p.isActive = 1 " +
             "AND p.moderationStatus =com.skillbox.engine.model.enums.PostModerationStatus.ACCEPTED " +
-            "AND p.time <= CURRENT_DATE() " +
+            "AND p.time <= :timestamp " +
             "GROUP BY p.id " +
             "ORDER BY p.time DESC"
     )
-    Page<Post> findPostsByTag(Pageable pageable, String tag);
+    Page<Post> findPostsByTag(Pageable pageable, String tag, Timestamp timestamp);
 
     @Query("SELECT p " +
             "FROM Post p " +

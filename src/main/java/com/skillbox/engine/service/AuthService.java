@@ -10,7 +10,6 @@ import com.skillbox.engine.repository.CaptchaRepository;
 import lombok.RequiredArgsConstructor;
 import org.imgscalr.Scalr;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -110,7 +109,7 @@ public class AuthService {
 
     private long getModerationCount(boolean isModeration){
         if (isModeration){
-            return postService.numberOfPostsForMoreration();
+            return postService.numberOfPostsForModeration();
         }
         return 0;
     }

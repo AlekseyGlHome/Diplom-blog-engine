@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -73,7 +74,7 @@ public class PostService {
 
     }
 
-    public long numberOfPostsForMoreration() {
+    public long numberOfPostsForModeration() {
         return postRepository.countByModerationStatusNew();
     }
 
@@ -82,7 +83,7 @@ public class PostService {
             return getAllPosts(offset, limit, "recent");
         }
         PageRequest pageRequest = getPageRequest(offset, limit);
-        Page<Post> posts = postRepository.SearchesByPostsSortByDateDesc(pageRequest, query.trim());
+        Page<Post> posts = postRepository.SearchesByPostsSortByDateDesc(pageRequest, query.trim(), Timestamp.valueOf(LocalDateTime.now()));
         List<PostDTO> postsDTO = getPostDTOS(posts);
         return getPostResponse(posts.getTotalElements(), postsDTO);
     }
@@ -90,7 +91,7 @@ public class PostService {
     public PostResponse getAllPosts(int offset, int limit, String mode) {
         PostViewMode viewMode = PostViewMode.valueOf(mode.toUpperCase());
         PageRequest pageRequest = getPageRequest(offset, limit);
-        Page<Post> posts = sortModePost.get(viewMode).sort(pageRequest);
+        Page<Post> posts = sortModePost.get(viewMode).sort(pageRequest, Timestamp.valueOf(LocalDateTime.now()));
         List<PostDTO> postsDTO = getPostDTOS(posts);
         return getPostResponse(posts.getTotalElements(), postsDTO);
     }
@@ -122,22 +123,22 @@ public class PostService {
     }
 
     public CalendarResponse getCalendar(int year) {
-        List<CalendarYearDTO> calendarYearDTOList = postRepository.getYearsOfPosts();
-        List<CalendarDatePostCount> calendarDatePostCountList = postRepository.getTheCountOfPostsByDateOfPosts(year);
+        List<CalendarYearDTO> calendarYearDTOList = postRepository.getYearsOfPosts(Timestamp.valueOf(LocalDateTime.now()));
+        List<CalendarDatePostCount> calendarDatePostCountList = postRepository.getTheCountOfPostsByDateOfPosts(year, Timestamp.valueOf(LocalDateTime.now()));
 
         return buildCalendarResponse(calendarYearDTOList, calendarDatePostCountList);
     }
 
     public PostResponse getAllPostsOnTheDate(int offSet, int limit, String date) {
         PageRequest pageRequest = getPageRequest(offSet, limit);
-        Page<Post> posts = postRepository.findAllPostsOnTheDate(pageRequest, date);
+        Page<Post> posts = postRepository.findAllPostsOnTheDate(pageRequest, date, Timestamp.valueOf(LocalDateTime.now()));
         List<PostDTO> postsDTO = getPostDTOS(posts);
         return getPostResponse(posts.getTotalElements(), postsDTO);
     }
 
     public PostResponse getPostsByTag(int offSet, int limit, String tag) {
         PageRequest pageRequest = getPageRequest(offSet, limit);
-        Page<Post> posts = postRepository.findPostsByTag(pageRequest, tag);
+        Page<Post> posts = postRepository.findPostsByTag(pageRequest, tag, Timestamp.valueOf(LocalDateTime.now()));
         List<PostDTO> postsDTO = getPostDTOS(posts);
         return getPostResponse(posts.getTotalElements(), postsDTO);
     }
@@ -268,8 +269,23 @@ public class PostService {
     }
 
     public ModerationResponse editModeration(String userName, ModerationRequest moderationRequest) {
-
         ModerationResponse moderationResponse = new ModerationResponse();
+        Optional<Post> postOptional = postRepository.findById(moderationRequest.getPostId());
+        if (!postOptional.isPresent()) {
+            return moderationResponse;
+        }
+
+        User user = userService.findByEmail(userName).get();
+        Post post = postOptional.get();
+        if (moderationRequest.getDecision().equals("accept")) {
+            post.setModerationStatus(PostModerationStatus.ACCEPTED);
+        } else {
+            post.setModerationStatus(PostModerationStatus.DECLINED);
+        }
+        post.setModerator(user);
+        postRepository.save(post);
+        moderationResponse.setResult(true);
+
         return moderationResponse;
     }
 
@@ -281,7 +297,9 @@ public class PostService {
             post.setModerationStatus(PostModerationStatus.NEW);
         }
         post.setTime(Timestamp.valueOf(convertLongToLocalDateTime(postRequest.getTimestamp())));
-        post.setUser(currentUser);
+        if (post.getUser()==null) {
+            post.setUser(currentUser);
+        }
         post.setTitle(postRequest.getTitle());
         post.setText(postRequest.getText());
         Collection<Tag> tags = getTags(postRequest);

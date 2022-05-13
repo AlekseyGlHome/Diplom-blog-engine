@@ -32,7 +32,7 @@ config:
     StorageTime: 60
     Height: 35
     Width: 100
-  uploadFile: c:/uploads
+#  uploadFile: c:/uploads
 
   # Linux
   #endOfFilePath: /home/alexey/uploads

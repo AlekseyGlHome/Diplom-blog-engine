@@ -15,7 +15,7 @@ import java.io.IOException;
 @RestController
 @RequiredArgsConstructor
 public class ApiImageController {
-    @Value("${config.uploadFile}")
+    @Value("${config.endOfFilePath}")
     private String uploadFile;
 
     private final ImageService imageService;

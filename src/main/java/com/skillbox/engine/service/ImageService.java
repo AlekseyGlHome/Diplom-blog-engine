@@ -1,10 +1,14 @@
 package com.skillbox.engine.service;
 
 import com.skillbox.engine.exception.LoadImageExceprion;
+import org.imgscalr.Scalr;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
@@ -12,7 +16,7 @@ import java.util.UUID;
 
 @Service
 public class ImageService {
-    @Value("${config.uploadFile}")
+    @Value("${config.endOfFilePath}")
     private String uploadFile;
 
     public String loadImage(MultipartFile file) throws IOException, LoadImageExceprion {
@@ -38,6 +42,12 @@ public class ImageService {
         return randomPath + resultFileName;
     }
 
+    public ByteArrayOutputStream resizeImage(BufferedImage image, String format, int width, int height) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        BufferedImage newImage = Scalr.resize(image, Scalr.Method.QUALITY, Scalr.Mode.AUTOMATIC, width, height);
+        ImageIO.write(newImage, format, outputStream);
+        return outputStream;
+    }
 
     private String randomPathGeneration() {
         StringBuilder path = new StringBuilder();

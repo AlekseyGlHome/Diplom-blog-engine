@@ -1,6 +1,8 @@
 package com.skillbox.engine.service;
 
+import com.skillbox.engine.api.request.Profile;
 import com.skillbox.engine.api.request.UserRegistrRequest;
+import com.skillbox.engine.api.response.UpdateUserResponse;
 import com.skillbox.engine.model.DTO.UserDTO;
 import com.skillbox.engine.model.DTO.UserPhotoDTO;
 import com.skillbox.engine.model.entity.User;
@@ -25,6 +27,12 @@ public class UserService {
 
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
+    }
+
+    public UpdateUserResponse updateUser(String email, Profile profile) {
+        User user = findByEmail(email).get();
+
+        return new UpdateUserResponse();
     }
 
 

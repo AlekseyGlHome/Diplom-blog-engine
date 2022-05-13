@@ -40,6 +40,7 @@ public class AuthService {
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
     private final PostService postService;
+    private final ImageService imageService;
 
     private final Random random = new Random();
 
@@ -77,7 +78,7 @@ public class AuthService {
                             userLoginRequest.getPassword()));
             SecurityContextHolder.getContext().setAuthentication(auth);
             user = (User) auth.getPrincipal();
-        }catch (BadCredentialsException ex){
+        } catch (BadCredentialsException ex) {
             return new LoginRespons();
         }
 
@@ -107,8 +108,8 @@ public class AuthService {
                 .build();
     }
 
-    private long getModerationCount(boolean isModeration){
-        if (isModeration){
+    private long getModerationCount(boolean isModeration) {
+        if (isModeration) {
             return postService.numberOfPostsForModeration();
         }
         return 0;
@@ -177,16 +178,16 @@ public class AuthService {
         Cage gCage = new GCage();
         BufferedImage bufferedImage = gCage.drawImage(captchaText);
         String image = "data:image/".concat(gCage.getFormat()).concat(";base64,");
-        image += Base64.getEncoder().encodeToString(resizeCaptcha(bufferedImage, gCage.getFormat()).toByteArray());
+        image += Base64.getEncoder().encodeToString(imageService.resizeImage(bufferedImage, gCage.getFormat(), captchaWidth, captchaHeight).toByteArray());
         return image;
     }
 
-    private ByteArrayOutputStream resizeCaptcha(BufferedImage image, String format) throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        BufferedImage newImage = Scalr.resize(image, Scalr.Method.QUALITY, Scalr.Mode.AUTOMATIC, captchaWidth, captchaHeight);
-        ImageIO.write(newImage, format, outputStream);
-        return outputStream;
-    }
+//    private ByteArrayOutputStream resizeCaptcha(BufferedImage image, String format) throws IOException {
+//        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+//        BufferedImage newImage = Scalr.resize(image, Scalr.Method.QUALITY, Scalr.Mode.AUTOMATIC, captchaWidth, captchaHeight);
+//        ImageIO.write(newImage, format, outputStream);
+//        return outputStream;
+//    }
 
     private String generateCaptchaText() {
         char[] chars = "ACEFGHJKLMNPQRUVWXY1234567890".toCharArray();

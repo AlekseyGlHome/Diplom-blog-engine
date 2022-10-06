@@ -10,6 +10,7 @@ import com.skillbox.engine.model.enums.ModerationStatus;
 import com.skillbox.engine.model.enums.PostModerationStatus;
 import com.skillbox.engine.model.enums.PostViewMode;
 import com.skillbox.engine.repository.PostRepository;
+import com.skillbox.engine.repository.PostVotesRepository;
 import org.jsoup.Jsoup;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,16 +33,20 @@ public class PostService {
     private final UserService userService;
     private final TagService tagService;
 
+    private final PostVotesRepository postVotesRepository;
+
     public PostService(PostRepository postRepository,
                        Tag2PostService tag2PostService,
                        PostCommentService postCommentService,
                        UserService userService,
-                       TagService tagService) {
+                       TagService tagService,
+                       PostVotesRepository postVotesRepository) {
         this.postRepository = postRepository;
         this.tag2PostService = tag2PostService;
         this.postCommentService = postCommentService;
         this.userService = userService;
         this.tagService = tagService;
+        this.postVotesRepository = postVotesRepository;
         initSort();
     }
 
@@ -297,7 +302,7 @@ public class PostService {
             post.setModerationStatus(PostModerationStatus.NEW);
         }
         post.setTime(Timestamp.valueOf(convertLongToLocalDateTime(postRequest.getTimestamp())));
-        if (post.getUser()==null) {
+        if (post.getUser() == null) {
             post.setUser(currentUser);
         }
         post.setTitle(postRequest.getTitle());
@@ -307,21 +312,57 @@ public class PostService {
         return post;
     }
 
-//    private LocalDateTime convertLongToLocalDateTime(Long longTime) {
-//        LocalDateTime time = LocalDateTime.ofInstant(Instant.ofEpochSecond(longTime),
-//                TimeZone.getDefault().toZoneId());
-//        if (time.compareTo(LocalDateTime.now())<1){
-//            time = LocalDateTime.now();
-//        }
-//        return time;
-//    }
-
     private Collection<Tag> getTags(PostRequest postRequest) {
         Collection<Tag> tags = new ArrayList<>();
         for (String currentTag : postRequest.getTags()) {
             tags.add(tagService.addIfNot(currentTag));
         }
         return tags;
+    }
+
+    public LikeDislikePostResponse addLike(int id, String userEmail) throws NotFoundException {
+        User currentUser = userService.findByEmail(userEmail).orElseThrow(() -> new NotFoundException("user not found"));
+        Post currentPost = postRepository.findById(id).get();
+        Optional<PostVotes> postVotesOptional = postVotesRepository.findByPostIdAndUserId(id, currentUser.getId());
+        LikeDislikePostResponse likeDislikePostResponse = new LikeDislikePostResponse();
+        if (postVotesOptional.isPresent()) {
+            if (postVotesOptional.get().getValue() < 0) {
+                postVotesRepository.delete(postVotesOptional.get());
+                newPostVote(currentUser, currentPost, (byte) 1);
+                likeDislikePostResponse.setResult(true);
+            }
+        } else {
+            newPostVote(currentUser, currentPost, (byte) 1);
+            likeDislikePostResponse.setResult(true);
+        }
+        return likeDislikePostResponse;
+    }
+
+    public LikeDislikePostResponse addDislike(int id, String userEmail) throws NotFoundException {
+        User currentUser = userService.findByEmail(userEmail).orElseThrow(() -> new NotFoundException("user not found"));
+        Post currentPost = postRepository.findById(id).get();
+        Optional<PostVotes> postVotesOptional = postVotesRepository.findByPostIdAndUserId(id, currentUser.getId());
+        LikeDislikePostResponse likeDislikePostResponse = new LikeDislikePostResponse();
+        if (postVotesOptional.isPresent()) {
+            if (postVotesOptional.get().getValue() > 0) {
+                postVotesRepository.delete(postVotesOptional.get());
+                newPostVote(currentUser, currentPost, (byte) -1);
+                likeDislikePostResponse.setResult(true);
+            }
+        } else {
+            newPostVote(currentUser, currentPost, (byte) -1);
+            likeDislikePostResponse.setResult(true);
+        }
+        return likeDislikePostResponse;
+    }
+
+    private void newPostVote(User currentUser, Post currentPost, Byte value) {
+        PostVotes newPostVote = new PostVotes();
+        newPostVote.setUser(currentUser);
+        newPostVote.setPost(currentPost);
+        newPostVote.setTime(LocalDateTime.now());
+        newPostVote.setValue(value);
+        postVotesRepository.save(newPostVote);
     }
 
     private boolean isError(PostRequest postRequest, ErrorUpdatePost errorUpdatePost) {

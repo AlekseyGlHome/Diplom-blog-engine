@@ -1,6 +1,8 @@
 package com.skillbox.engine.controller;
 
+import com.skillbox.engine.api.request.LikeDislikePostRequest;
 import com.skillbox.engine.api.request.PostRequest;
+import com.skillbox.engine.api.response.LikeDislikePostResponse;
 import com.skillbox.engine.api.response.PostDetailResponse;
 import com.skillbox.engine.api.response.PostResponse;
 import com.skillbox.engine.api.response.PostUpdateResponse;
@@ -108,5 +110,21 @@ public class ApiPostController {
         return ResponseEntity.ok(postUpdateResponse);
     }
 
+    @PostMapping("/like")
+    @PreAuthorize("hasAnyAuthority('user:moderate')||hasAuthority('user:write')")
+    public ResponseEntity<LikeDislikePostResponse> like(Principal principal,
+                                                        @RequestBody LikeDislikePostRequest likeDislikePostRequest)
+            throws NotFoundException {
+        LikeDislikePostResponse response = postsService.addLike(likeDislikePostRequest.getPostId(), principal.getName());
+        return ResponseEntity.ok(response);
+    }
 
+    @PostMapping("/dislike")
+    @PreAuthorize("hasAnyAuthority('user:moderate')||hasAuthority('user:write')")
+    public ResponseEntity<LikeDislikePostResponse> dislake(Principal principal,
+                                                           @RequestBody LikeDislikePostRequest likeDislikePostRequest)
+            throws NotFoundException {
+        LikeDislikePostResponse response = postsService.addDislike(likeDislikePostRequest.getPostId(), principal.getName());
+        return ResponseEntity.ok(response);
+    }
 }
